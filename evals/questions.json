@@ -1,0 +1,90 @@
+[
+  {
+    "id": "q1",
+    "question": "Which project has the most issues?",
+    "category": "aggregation",
+    "difficulty": "easy",
+    "reference_answer": "microsoft/winget-pkgs with 60 issues",
+    "notes": "Simple aggregation - SQL has clear advantage"
+  },
+  {
+    "id": "q2",
+    "question": "Are there any duplicate project names (same repo name under different owners)? If so, which name is most common?",
+    "category": "aggregation",
+    "difficulty": "easy",
+    "reference_answer": "Yes, there are many duplicate project names. The most common is 'dotfiles' with 227 repos using that name.",
+    "notes": "Simple aggregation with HAVING clause"
+  },
+  {
+    "id": "q3",
+    "question": "Find all open bug issues that mention a workaround in their body. List the repo and issue title.",
+    "category": "cross_reference",
+    "difficulty": "medium",
+    "reference_answer": "There are 4 open bug issues with workarounds: quarto-dev/quarto-cli #1615 (Can't render README.qmd), Expensify/App #17588 (archive workspace rooms), Expensify/App #18891 (character limit), and more.",
+    "notes": "Requires combining label parsing (semi-structured) with text search - harder for SQL due to JSON labels"
+  },
+  {
+    "id": "q4",
+    "question": "The Expensify/App repo has several issues marked as 'HOLD' in their title. What issue numbers are they waiting on? Look at the issue bodies to find the blocking issue references.",
+    "category": "cross_document",
+    "difficulty": "hard",
+    "reference_answer": "Expensify/App has multiple HOLD issues. Issue #11515 is on hold for #15212 (navigation improvements). Issue #17588 is also waiting for #15212. Issue #18891 is on hold for #18647. Issue #27937 is waiting for #27198. These blocking issues need to be resolved first.",
+    "notes": "Requires reading issue bodies to extract referenced issue numbers - cannot be done with single SQL query"
+  },
+  {
+    "id": "q5",
+    "question": "What percentage of pull requests are merged?",
+    "category": "aggregation",
+    "difficulty": "easy",
+    "reference_answer": "41.8% of pull requests are merged",
+    "notes": "Simple aggregation"
+  },
+  {
+    "id": "q6",
+    "question": "Find issues that describe regression bugs (where something used to work but stopped working). What repos have these regression issues?",
+    "category": "text_reasoning",
+    "difficulty": "medium",
+    "reference_answer": "metabase/metabase has a regression issue (#14504) about CSV exports being truncated - it mentions this is a 'regression since 0.36.8'. dotnet/SqlClient also has regression-like issues.",
+    "notes": "Requires understanding issue content to identify regression patterns, not just keyword matching"
+  },
+  {
+    "id": "q7",
+    "question": "Which repositories have PRs that explicitly reference fixing a specific issue number (using 'Fixes #', 'Closes #', or 'Resolves #')? List the repo and what issues the PRs claim to fix.",
+    "category": "cross_document",
+    "difficulty": "hard",
+    "reference_answer": "sparklemotion/nokogiri has a PR fixing #350 (CSS :has() selector). r-lib/roxygen2 has a PR closing #1409 (importFrom error). scipy/scipy has a PR closing #16131 (spsolve_triangular performance). SteamDatabase/FileDetectionRuleSets has a PR closing #307.",
+    "notes": "Requires parsing PR bodies to extract issue references - tests understanding of cross-document linking"
+  },
+  {
+    "id": "q8",
+    "question": "Find issues that contain detailed reproduction steps (with 'Steps to Reproduce', 'Expected', and 'Actual' sections). What common problems do these well-documented bug reports describe?",
+    "category": "text_reasoning",
+    "difficulty": "hard",
+    "reference_answer": "duplicati/duplicati has a well-documented issue about file access problems - it includes version info, steps to reproduce, expected vs actual behavior, and detailed error logs showing 'Access denied' errors.",
+    "notes": "Requires reading and understanding issue structure and content - not just pattern matching"
+  },
+  {
+    "id": "q9",
+    "question": "How many issues mention 'security' or 'vulnerability'? Are these mostly in specific types of projects?",
+    "category": "text_search_plus_reasoning",
+    "difficulty": "medium",
+    "reference_answer": "1,811 issues mention security or vulnerability. Many are from dependency update bots (like dependabot) flagging security updates in various projects.",
+    "notes": "Combines counting with content analysis"
+  },
+  {
+    "id": "q10",
+    "question": "Looking at the dotnet/maui repository, what are the main categories of bugs being reported? Summarize the common themes across multiple issues.",
+    "category": "multi_document_synthesis",
+    "difficulty": "hard",
+    "reference_answer": "dotnet/maui issues cover several themes: UI rendering problems (shadows slow on Android, Label FormattedText issues, RoundRectangle borders), platform-specific bugs (iOS, Android, MacCatalyst), performance issues (CollectionView, FilePicker slowness), and control-specific bugs (Switch, ImageButton, Grid styles).",
+    "notes": "Requires reading multiple issues from same repo and synthesizing patterns - impossible with single SQL query"
+  },
+  {
+    "id": "q11",
+    "question": "How many repos are there from vercel?",
+    "category": "aggregation",
+    "difficulty": "easy",
+    "reference_answer": "10 repos from vercel (ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel)",
+    "notes": "Simple count by owner - both bash and SQL can handle this easily"
+  }
+]
