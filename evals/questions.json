@@ -17,22 +17,6 @@
   },
   {
     "id": "q3",
-    "question": "Find all open bug issues that mention a workaround in their body. List the repo and issue title.",
-    "category": "cross_reference",
-    "difficulty": "medium",
-    "reference_answer": "There are 4 open bug issues with workarounds: quarto-dev/quarto-cli #1615 (Can't render README.qmd), Expensify/App #17588 (archive workspace rooms), Expensify/App #18891 (character limit), and more.",
-    "notes": "Requires combining label parsing (semi-structured) with text search - harder for SQL due to JSON labels"
-  },
-  {
-    "id": "q4",
-    "question": "The Expensify/App repo has several issues marked as 'HOLD' in their title. What issue numbers are they waiting on? Look at the issue bodies to find the blocking issue references.",
-    "category": "cross_document",
-    "difficulty": "hard",
-    "reference_answer": "Expensify/App has multiple HOLD issues. Issue #11515 is on hold for #15212 (navigation improvements). Issue #17588 is also waiting for #15212. Issue #18891 is on hold for #18647. Issue #27937 is waiting for #27198. These blocking issues need to be resolved first.",
-    "notes": "Requires reading issue bodies to extract referenced issue numbers - cannot be done with single SQL query"
-  },
-  {
-    "id": "q5",
     "question": "What percentage of pull requests are merged?",
     "category": "aggregation",
     "difficulty": "easy",
@@ -40,51 +24,219 @@
     "notes": "Simple aggregation"
   },
   {
+    "id": "q4",
+    "question": "How many repos are there from vercel?",
+    "category": "aggregation",
+    "difficulty": "easy",
+    "reference_answer": "10 repos from vercel (ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel)",
+    "notes": "Simple count by owner"
+  },
+  {
+    "id": "q5",
+    "question": "Which organization has the most repositories in the dataset?",
+    "category": "aggregation",
+    "difficulty": "easy",
+    "reference_answer": "microsoft has 92 repositories, followed by ministryofjustice (78), apache (70), openshift (39), and dotnet (27)",
+    "notes": "Simple GROUP BY on owner"
+  },
+  {
     "id": "q6",
-    "question": "Find issues that describe regression bugs (where something used to work but stopped working). What repos have these regression issues?",
-    "category": "text_reasoning",
-    "difficulty": "medium",
-    "reference_answer": "metabase/metabase has a regression issue (#14504) about CSV exports being truncated - it mentions this is a 'regression since 0.36.8'. dotnet/SqlClient also has regression-like issues.",
-    "notes": "Requires understanding issue content to identify regression patterns, not just keyword matching"
-  },
-  {
-    "id": "q7",
-    "question": "Which repositories have PRs that explicitly reference fixing a specific issue number (using 'Fixes #', 'Closes #', or 'Resolves #')? List the repo and what issues the PRs claim to fix.",
-    "category": "cross_document",
-    "difficulty": "hard",
-    "reference_answer": "sparklemotion/nokogiri has a PR fixing #350 (CSS :has() selector). r-lib/roxygen2 has a PR closing #1409 (importFrom error). scipy/scipy has a PR closing #16131 (spsolve_triangular performance). SteamDatabase/FileDetectionRuleSets has a PR closing #307.",
-    "notes": "Requires parsing PR bodies to extract issue references - tests understanding of cross-document linking"
-  },
-  {
-    "id": "q8",
-    "question": "Find issues that contain detailed reproduction steps (with 'Steps to Reproduce', 'Expected', and 'Actual' sections). What common problems do these well-documented bug reports describe?",
-    "category": "text_reasoning",
-    "difficulty": "hard",
-    "reference_answer": "duplicati/duplicati has a well-documented issue about file access problems - it includes version info, steps to reproduce, expected vs actual behavior, and detailed error logs showing 'Access denied' errors.",
-    "notes": "Requires reading and understanding issue structure and content - not just pattern matching"
-  },
-  {
-    "id": "q9",
-    "question": "How many issues mention 'security' or 'vulnerability'? Are these mostly in specific types of projects?",
+    "question": "How many issues mention 'security' or 'vulnerability'? Which types of projects have the most security-related issues?",
     "category": "text_search_plus_reasoning",
     "difficulty": "medium",
     "reference_answer": "1,811 issues mention security or vulnerability. Many are from dependency update bots (like dependabot) flagging security updates in various projects.",
     "notes": "Combines counting with content analysis"
   },
   {
+    "id": "q7",
+    "question": "Find all open bug issues that mention a workaround in their body. List the repo and issue title.",
+    "category": "cross_reference",
+    "difficulty": "medium",
+    "reference_answer": "There are 4 open bug issues with workarounds: quarto-dev/quarto-cli #1615 (Can't render README.qmd), Expensify/App #17588 (archive workspace rooms), Expensify/App #18891 (character limit), and more.",
+    "notes": "Requires combining label parsing (semi-structured) with text search"
+  },
+  {
+    "id": "q8",
+    "question": "Find issues that describe regression bugs (where something used to work but stopped working). What repos have these regression issues?",
+    "category": "text_reasoning",
+    "difficulty": "medium",
+    "reference_answer": "metabase/metabase has a regression issue (#14504) about CSV exports being truncated - it mentions this is a 'regression since 0.36.8'. dotnet/SqlClient also has regression-like issues.",
+    "notes": "Requires understanding issue content to identify regression patterns"
+  },
+  {
+    "id": "q9",
+    "question": "Which repositories have the most unique issue reporters (excluding bots)? List the top 5 with counts.",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "reference_answer": "openshift org has 80 unique reporters, microsoft has 79, huggingface has 60, elastic has 57, and dotnet has 47 unique human issue reporters.",
+    "notes": "Requires filtering out bots and counting distinct authors"
+  },
+  {
     "id": "q10",
+    "question": "Which human user (not a bot) has opened issues in the most different repositories?",
+    "category": "cross_entity",
+    "difficulty": "medium",
+    "reference_answer": "Excluding bots, users like harmeetsingh11, fblackburn1, mikereiddigital, NiclasNorin, and Velin92 have opened issues across 3-5 different repositories each.",
+    "notes": "Requires filtering bots and cross-referencing issues with repos"
+  },
+  {
+    "id": "q11",
+    "question": "Which repositories have pull requests but have never merged any of them? List at least 5.",
+    "category": "negation",
+    "difficulty": "medium",
+    "reference_answer": "Several repos have 0% merge rate: noflo/noflo-nodejs (11 PRs), odoo/odoo (18 PRs), googleworkspace/node-samples (28 PRs), kumahq/kuma (13 PRs), microsoft/winget-pkgs (19 PRs).",
+    "notes": "Requires finding absence of merged PRs"
+  },
+  {
+    "id": "q12",
+    "question": "The Expensify/App repo has several issues marked as 'HOLD' in their title. What issue numbers are they waiting on? Look at the issue bodies to find the blocking issue references.",
+    "category": "cross_document",
+    "difficulty": "hard",
+    "reference_answer": "Expensify/App has multiple HOLD issues. Issue #11515 is on hold for #15212 (navigation improvements). Issue #17588 is also waiting for #15212. Issue #18891 is on hold for #18647. Issue #27937 is waiting for #27198.",
+    "notes": "Requires reading issue bodies to extract referenced issue numbers"
+  },
+  {
+    "id": "q13",
+    "question": "Which repositories have PRs that explicitly reference fixing a specific issue number (using 'Fixes #', 'Closes #', or 'Resolves #')? List the repo and what issues the PRs claim to fix.",
+    "category": "cross_document",
+    "difficulty": "hard",
+    "reference_answer": "sparklemotion/nokogiri has a PR fixing #350 (CSS :has() selector). r-lib/roxygen2 has a PR closing #1409 (importFrom error). scipy/scipy has a PR closing #16131. SteamDatabase/FileDetectionRuleSets has a PR closing #307.",
+    "notes": "Requires parsing PR bodies to extract issue references"
+  },
+  {
+    "id": "q14",
+    "question": "Find issues that contain detailed reproduction steps (with 'Steps to Reproduce', 'Expected', and 'Actual' sections). What common problems do these well-documented bug reports describe?",
+    "category": "text_reasoning",
+    "difficulty": "hard",
+    "reference_answer": "duplicati/duplicati has a well-documented issue about file access problems - it includes version info, steps to reproduce, expected vs actual behavior, and detailed error logs showing 'Access denied' errors.",
+    "notes": "Requires reading and understanding issue structure and content"
+  },
+  {
+    "id": "q15",
     "question": "Looking at the dotnet/maui repository, what are the main categories of bugs being reported? Summarize the common themes across multiple issues.",
     "category": "multi_document_synthesis",
     "difficulty": "hard",
     "reference_answer": "dotnet/maui issues cover several themes: UI rendering problems (shadows slow on Android, Label FormattedText issues, RoundRectangle borders), platform-specific bugs (iOS, Android, MacCatalyst), performance issues (CollectionView, FilePicker slowness), and control-specific bugs (Switch, ImageButton, Grid styles).",
-    "notes": "Requires reading multiple issues from same repo and synthesizing patterns - impossible with single SQL query"
+    "notes": "Requires reading multiple issues from same repo and synthesizing patterns"
   },
   {
-    "id": "q11",
-    "question": "How many repos are there from vercel?",
+    "id": "q16",
+    "question": "Which repository has the most diverse community engagement? Find the repo where issues get comments from the most unique users (excluding the issue author).",
+    "category": "cross_entity",
+    "difficulty": "hard",
+    "reference_answer": "Expensify/App has the most community engagement with 28 unique commenters on issues (excluding issue authors), followed by home-assistant/core (21), elastic/kibana (13), llvm/llvm-project (11), and microsoft/vscode (11).",
+    "notes": "Requires joining issues, comments, filtering out self-comments"
+  },
+  {
+    "id": "q17",
+    "question": "Find issues that report memory leaks or out-of-memory errors. What applications or systems are affected?",
+    "category": "text_reasoning",
+    "difficulty": "hard",
+    "reference_answer": "Memory-related issues include: microsoft/vscode #43226 (memory in extension API), joltup/rn-fetch-blob #24 (crash downloading large files), kedacore/charts #226 (helm chart issues), chartjs/Chart.js #10890 (chart shrinking with zoom).",
+    "notes": "Requires semantic understanding of memory-related problems"
+  },
+  {
+    "id": "q18",
+    "question": "Which pull requests mention 'breaking changes'? Were these PRs merged? What kind of breaking changes were they?",
+    "category": "text_reasoning",
+    "difficulty": "hard",
+    "reference_answer": "Several PRs mention breaking changes, mostly dependency updates. NixOS/nixpkgs #224796 was merged (adding libusbp). Most breaking change PRs from bots (like dependabot updating less-loader to v11, uuid to v9) were NOT merged.",
+    "notes": "Requires understanding PR content and correlating with merge status"
+  },
+  {
+    "id": "q19",
+    "question": "Find issues where someone reported a bug, and then later someone submitted a PR that claims to fix that specific issue. List these bug-fix pairs.",
+    "category": "multi_hop",
+    "difficulty": "hard",
+    "reference_answer": "Examples include: sparklemotion/nokogiri issue #350 fixed by a PR implementing CSS :has() selector, r-lib/roxygen2 issue #1409 about importFrom error has a closing PR, scipy issue #16131 about spsolve_triangular performance has a fixing PR.",
+    "notes": "Requires correlating issues and PRs through reference parsing"
+  },
+  {
+    "id": "q20",
+    "question": "Which issues have labels that seem contradictory (like both 'bug' and 'enhancement')? List the repos and issue titles.",
+    "category": "semantic_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Issues with both bug and enhancement labels: BradyAJohnston/MolecularNodes #120 (Support .MOL files), UtilitechAS/amsreader-firmware #627 (device reboots), LeavesMC/Leaves #134, arihanv/MiniStream #3 (entire app broken), TTT-2/TTT2 #1275 (Crosshair fixes).",
+    "notes": "Requires parsing labels and understanding semantic conflict"
+  },
+  {
+    "id": "q21",
+    "question": "Identify the 'bus factor' risk: find repositories where a single user accounts for more than 50% of the pull requests. Who are these key contributors?",
+    "category": "risk_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Many repositories have high bus factor risk. Look for repos where authors like dependabot[bot] or renovate[bot] dominate PR activity, or where single human contributors like oliver-jenny, Seong-Hoon-Lim, or daminoworld contribute most PRs to their repos.",
+    "notes": "Requires calculating per-author contribution percentages"
+  },
+  {
+    "id": "q22",
+    "question": "Which issues have stack traces or error logs in their body? Categorize them by programming language/platform based on the error format.",
+    "category": "text_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Issues with stack traces: duplicati/duplicati (C#/.NET exceptions), zephyrproject-rtos/zephyr (Python ImportError), joltup/rn-fetch-blob (React Native crash), home-assistant/core (Python), scrapy/scrapy (Python async errors), elastic/elasticsearch-dsl-py (Python connection errors).",
+    "notes": "Requires pattern recognition across different language stack trace formats"
+  },
+  {
+    "id": "q23",
+    "question": "Find the longest issue descriptions (by character count). What makes these issues so detailed? Summarize what they're about.",
+    "category": "text_analysis",
+    "difficulty": "hard",
+    "reference_answer": "The longest issues are: MihuBot/runtime-utils #220 (100k+ chars, detailed implementation for getStaticFieldCurrentClass), and several dependabot PRs with massive dependency update descriptions (~65k chars each) in repos like zhuxiaow0/calico, paketo-buildpacks/dotnet-core-aspnet-runtime.",
+    "notes": "Requires reading and summarizing very long content"
+  },
+  {
+    "id": "q24",
+    "question": "Which events show the most activity in the dataset? What types of GitHub events are captured and what's the distribution?",
     "category": "aggregation",
-    "difficulty": "easy",
-    "reference_answer": "10 repos from vercel (ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel)",
-    "notes": "Simple count by owner - both bash and SQL can handle this easily"
+    "difficulty": "medium",
+    "reference_answer": "The dataset has 100k events. Distribution: PushEvent (63,659), CreateEvent (10,739), PullRequestEvent (7,100), IssueCommentEvent (4,193), WatchEvent (3,518), DeleteEvent (3,014), PullRequestReviewEvent (2,592), IssuesEvent (1,426).",
+    "notes": "Simple aggregation on events table"
+  },
+  {
+    "id": "q25",
+    "question": "Which human user (excluding bots) has made the most comments across all issues and PRs?",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "reference_answer": "Among humans, liferay-continuous-integration made 48 comments across 16 threads. Other active commenters include breathx (41 comments), wingetbot (38), qperie (33), and openshift-ci-robot (34). Note: some of these may be CI systems rather than humans.",
+    "notes": "Requires filtering bots and aggregating comments"
+  },
+  {
+    "id": "q26",
+    "question": "Find issues that reference 'depends on', 'blocked by', or 'waiting for' another issue. What blocking relationships exist?",
+    "category": "dependency_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Issues with dependencies: haskell/cabal #4035 (private dependencies), bazelbuild/bazel #11523 (private git repos), kedacore/charts #226 (CRD installation order), openshift/cluster-node-tuning-operator #484 (Hypershift adaptation).",
+    "notes": "Requires text parsing to find dependency relationships"
+  },
+  {
+    "id": "q27",
+    "question": "Which repositories have issues labeled as 'good first issue' that are still open? How many are there per repo?",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "reference_answer": "Repos with open 'good first issue' labels: AnupK1234/MealMatters (2), hasadna/open-bus-map-search (2), and several repos with 1 each including SleepAPI/SleepAPI, chaoxel/PixelPal, pooranjoyb/StoryBook-RN.",
+    "notes": "Requires parsing JSON labels field"
+  },
+  {
+    "id": "q28",
+    "question": "Compare the llvm/llvm-project and NixOS/nixpkgs repositories. Which has more active contributors? How do their issue and PR counts compare?",
+    "category": "comparative",
+    "difficulty": "hard",
+    "reference_answer": "llvm/llvm-project has 25 unique issue authors and 26 PR authors. NixOS/nixpkgs has 16 issue authors but 26 PR authors. NixOS/nixpkgs has significantly more issues (688) compared to llvm/llvm-project. Both have strong community contribution.",
+    "notes": "Requires comparing metrics across two specific repos"
+  },
+  {
+    "id": "q29",
+    "question": "Which issues have been open the longest without being closed? What repos are they in and what are they about?",
+    "category": "temporal",
+    "difficulty": "hard",
+    "reference_answer": "The dataset spans from 2011 to 2024. The oldest open issues date back to early dates in the dataset. Look for issues with created_at dates from 2011-2015 that still have state='open'.",
+    "notes": "Requires temporal analysis of issue age"
+  },
+  {
+    "id": "q30",
+    "question": "Are there any users who both reported an issue AND submitted a PR to fix their own issue? List them and their self-fixes.",
+    "category": "cross_entity",
+    "difficulty": "very_hard",
+    "reference_answer": "dependabot[bot] leads with 208 self-fixes. Among humans: oliver-jenny has 9 self-fixed issues, Seong-Hoon-Lim and daminoworld have 4 each, Manav-Aggarwal has 3.",
+    "notes": "Requires joining issues and PRs on author and matching issue references in PR body"
   }
 ]
