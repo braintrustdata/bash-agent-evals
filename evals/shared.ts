@@ -1,21 +1,16 @@
 import 'dotenv/config';
-import { Eval } from 'braintrust';
 import { LLMClassifierFromTemplate } from 'autoevals';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { runBashAgent } from '../agents/bash-agent.js';
-import { runFsAgent } from '../agents/fs-agent.js';
-import { runSqlAgent } from '../agents/sql-agent.js';
-import { runEmbeddingAgent } from '../agents/embedding-agent.js';
-import { getModelFromEnv, type ModelId } from '../models.js';
+import { getModelFromEnv, type ModelId } from '../src/models.js';
 
 // Get model from environment or default
-const model = getModelFromEnv();
+export const model = getModelFromEnv();
 
 // Load questions
 const questionsPath = join(process.cwd(), 'evals/questions.json');
 
-interface Question {
+export interface Question {
   id: string;
   question: string;
   category: string;
@@ -26,12 +21,12 @@ interface Question {
 
 const allQuestions: Question[] = JSON.parse(readFileSync(questionsPath, 'utf-8'));
 
-// Limit for debugging - set to undefined for all questions
+// Limit for debugging - set to null for all questions
 const LIMIT = null;
 const questions = LIMIT ? allQuestions.slice(0, LIMIT) : allQuestions;
 
-// Create data function with agent metadata
-const data = questions.map((q) => ({
+// Create data for evals
+export const data = questions.map((q) => ({
   input: q.question,
   expected: q.reference_answer,
   metadata: {
@@ -43,7 +38,7 @@ const data = questions.map((q) => ({
 }));
 
 // Custom Factuality scorer that doesn't penalize superset answers
-const Factuality = LLMClassifierFromTemplate({
+export const Factuality = LLMClassifierFromTemplate({
   name: 'Factuality',
   promptTemplate: `You are comparing a submitted answer to an expert answer on a given question. Here is the data:
 [BEGIN DATA]
@@ -74,39 +69,9 @@ The submitted answer may either be a subset or superset of the expert answer, or
 });
 
 // Helper to create task with model
-const createTask =
+export const createTask =
   (agentFn: (q: string, cb: undefined, model: ModelId) => Promise<{ answer: string }>) =>
   async (input: string) =>
     (await agentFn(input, undefined, model)).answer;
 
-Eval('bash-evals', {
-  experimentName: `embedding-${model}`,
-  metadata: { model, agent: 'sql' },
-  data,
-  task: createTask(runSqlAgent),
-  scores: [Factuality],
-});
-
-Eval('bash-evals', {
-  experimentName: `embedding-${model}`,
-  metadata: { model, agent: 'bash' },
-  data,
-  task: createTask(runBashAgent),
-  scores: [Factuality],
-});
-
-Eval('bash-evals', {
-  experimentName: `fs-${model}`,
-  metadata: { model, agent: 'fs' },
-  data,
-  task: createTask(runFsAgent),
-  scores: [Factuality],
-});
-
-Eval('bash-evals', {
-  experimentName: `embedding-${model}`,
-  metadata: { model, agent: 'embedding' },
-  data,
-  task: createTask(runEmbeddingAgent),
-  scores: [Factuality],
-});
+export { ModelId };
