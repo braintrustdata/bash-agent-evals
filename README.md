@@ -52,6 +52,7 @@ pnpm embed
 ANTHROPIC_API_KEY=sk-ant-...  # Required for Claude
 OPENAI_API_KEY=sk-...         # Required for embeddings
 BRAINTRUST_API_KEY=...        # Required for evals
+BASH_TIMEOUT_MS=10000         # Optional: bash command timeout in ms (default: 10000)
 ```
 
 ## Usage

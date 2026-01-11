@@ -4,9 +4,16 @@ import { Bash, OverlayFs } from 'just-bash';
 import { join } from 'path';
 import { createModel, getModelFromEnv, type ModelId } from '../models.js';
 
+// Max steps for agent execution (shared across all agents)
+export const MAX_STEPS = 50;
+
 const DATA_DIR = join(process.cwd(), 'data/filesystem');
 const MAX_OUTPUT_CHARS = 30000;
-const COMMAND_TIMEOUT_MS = 10000; // 10 second timeout for bash commands
+const DEFAULT_TIMEOUT_MS = 10000; // 10 second default timeout
+
+// Configurable via BASH_TIMEOUT_MS env var (in milliseconds)
+export const BASH_TIMEOUT_MS =
+  parseInt(process.env.BASH_TIMEOUT_MS || '', 10) || DEFAULT_TIMEOUT_MS;
 
 class TimeoutError extends Error {
   constructor(command: string, timeoutMs: number) {
@@ -106,7 +113,7 @@ export async function runBashAgent(
   const bash = new Bash({ fs: overlay, cwd: overlay.getMountPoint() });
 
   // Wrap bash with timeout handling
-  const timeoutBash = createTimeoutBash(bash, COMMAND_TIMEOUT_MS);
+  const timeoutBash = createTimeoutBash(bash, BASH_TIMEOUT_MS);
 
   // Create bash tool with the timeout-wrapped sandbox
   // Set destination to match overlay mount point so cwd is correct
@@ -126,7 +133,7 @@ export async function runBashAgent(
     model: createModel(modelId ?? getModelFromEnv()),
     instructions: SYSTEM_PROMPT,
     tools,
-    stopWhen: stepCountIs(20),
+    stopWhen: stepCountIs(MAX_STEPS),
   });
 
   const stream = await agent.stream({
@@ -161,6 +168,15 @@ export async function runBashAgent(
       case 'error':
         throw event.error;
     }
+  }
+
+  // Check if agent ran out of steps without completing
+  const steps = await stream.steps;
+  const lastStep = steps[steps.length - 1];
+  // If we hit max steps and the last step ended with tool-calls (not a text response),
+  // the agent was still working and didn't finish
+  if (steps.length >= MAX_STEPS && lastStep?.finishReason === 'tool-calls') {
+    throw new Error(`Agent reached maximum ${MAX_STEPS} steps without producing a final answer`);
   }
 
   return {

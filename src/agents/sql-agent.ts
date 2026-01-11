@@ -1,6 +1,6 @@
 import { ToolLoopAgent, stepCountIs } from '../tracing.js';
 import { sqlTools } from '../tools/sql-tools.js';
-import type { AgentResult, StreamCallbacks } from './bash-agent.js';
+import { MAX_STEPS, type AgentResult, type StreamCallbacks } from './bash-agent.js';
 import { createModel, getModelFromEnv, type ModelId } from '../models.js';
 
 const SYSTEM_PROMPT = `You are a data analyst assistant that queries GitHub event data stored in a SQLite database.
@@ -43,7 +43,7 @@ export async function runSqlAgent(
     model: createModel(modelId ?? getModelFromEnv()),
     instructions: SYSTEM_PROMPT,
     tools: sqlTools,
-    stopWhen: stepCountIs(20),
+    stopWhen: stepCountIs(MAX_STEPS),
   });
 
   const stream = await agent.stream({
@@ -74,6 +74,15 @@ export async function runSqlAgent(
         callbacks?.onProgress?.({ toolCalls: toolCallCount, tokens: totalTokens });
         break;
     }
+  }
+
+  // Check if agent ran out of steps without completing
+  const steps = await stream.steps;
+  const lastStep = steps[steps.length - 1];
+  // If we hit max steps and the last step ended with tool-calls (not a text response),
+  // the agent was still working and didn't finish
+  if (steps.length >= MAX_STEPS && lastStep?.finishReason === 'tool-calls') {
+    throw new Error(`Agent reached maximum ${MAX_STEPS} steps without producing a final answer`);
   }
 
   return {

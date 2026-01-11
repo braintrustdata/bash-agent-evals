@@ -1,11 +1,14 @@
 import 'dotenv/config';
-import { LLMClassifierFromTemplate, makePartial } from 'autoevals';
+import { LLMClassifierFromTemplate } from 'autoevals';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { getModelFromEnv, type ModelId } from '../src/models.js';
 
 // Get model from environment or default
 export const model = getModelFromEnv();
+
+// Re-export MAX_STEPS from agents
+export { MAX_STEPS } from '../src/agents/bash-agent.js';
 
 // Load questions
 const questionsPath = join(process.cwd(), 'evals/questions.json');
@@ -38,11 +41,9 @@ export const data = questions.map((q) => ({
 }));
 
 // Custom Factuality scorer that doesn't penalize superset answers
-// Wrapped with makePartial to support .partial() for pre-binding maxTokens
-const FactualityBase = makePartial(
-  LLMClassifierFromTemplate({
-    name: 'Factuality',
-    promptTemplate: `You are comparing a submitted answer to an expert answer on a given question. Here is the data:
+const FactualityBaseScorer = LLMClassifierFromTemplate({
+  name: 'Factuality',
+  promptTemplate: `You are comparing a submitted answer to an expert answer on a given question. Here is the data:
 [BEGIN DATA]
 **********
 [Question]: {{input}}
@@ -60,20 +61,52 @@ The submitted answer may either be a subset or superset of the expert answer, or
 (C) The submitted answer contains all the same details as the expert answer.
 (D) There is a disagreement between the submitted answer and the expert answer.
 (E) The answers differ, but these differences don't matter from the perspective of factuality.`,
-    choiceScores: {
-      A: 0.4,
-      B: 1, // Changed from 0.6 - superset answers are fully correct
-      C: 1,
-      D: 0,
-      E: 1,
-    },
-    model: 'gpt-4.1-mini',
-  }),
-  'Factuality',
-);
+  choiceScores: {
+    A: 0.4,
+    B: 1, // Changed from 0.6 - superset answers are fully correct
+    C: 1,
+    D: 0,
+    E: 1,
+  },
+  model: 'gpt-4.1-mini',
+});
 
-// Limit output tokens to prevent runaway generation and JSON parsing issues
-export const Factuality = FactualityBase.partial({ maxTokens: 500 });
+// Max retries when scorer fails (e.g., invalid choice returned)
+const MAX_SCORER_RETRIES = 3;
+
+// Wrapper that retries the Factuality scorer on failure
+export const Factuality = async (args: {
+  input: string;
+  output: string;
+  expected?: string;
+}): Promise<{ name: string; score: number | null; metadata?: Record<string, unknown> }> => {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= MAX_SCORER_RETRIES; attempt++) {
+    try {
+      const result = await FactualityBaseScorer({ ...args, maxTokens: 10_000 });
+      // If score is null, treat as failure and retry
+      if (result.score === null) {
+        lastError = new Error('Scorer returned null score');
+        continue;
+      }
+      return result;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      // Continue to next attempt
+    }
+  }
+
+  // All retries exhausted - return error result
+  return {
+    name: 'Factuality',
+    score: null,
+    metadata: {
+      error: lastError?.message || 'Unknown error after retries',
+      retries: MAX_SCORER_RETRIES,
+    },
+  };
+};
 
 import { runAgentInWorker } from '../src/agents/run-in-worker.js';
 import { defaultErrorScoreHandler, type Span } from 'braintrust';
