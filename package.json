@@ -9,7 +9,7 @@
     "download": "tsx src/data/download.ts",
     "transform": "tsx src/data/transform.ts",
     "embed": "tsx src/data/embed.ts",
-    "eval": "npx braintrust eval evals/run.eval.ts",
+    "eval": "npx braintrust eval evals/sql.eval.ts evals/bash.eval.ts evals/fs.eval.ts evals/embedding.eval.ts",
     "eval:sql": "npx braintrust eval evals/sql.eval.ts",
     "eval:bash": "npx braintrust eval evals/bash.eval.ts",
     "eval:fs": "npx braintrust eval evals/fs.eval.ts",

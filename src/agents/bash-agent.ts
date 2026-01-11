@@ -6,6 +6,45 @@ import { createModel, getModelFromEnv, type ModelId } from '../models.js';
 
 const DATA_DIR = join(process.cwd(), 'data/filesystem');
 const MAX_OUTPUT_CHARS = 30000;
+const COMMAND_TIMEOUT_MS = 10000; // 10 second timeout for bash commands
+
+class TimeoutError extends Error {
+  constructor(command: string, timeoutMs: number) {
+    super(
+      `Command timed out after ${timeoutMs / 1000}s: ${command.slice(0, 100)}${command.length > 100 ? '...' : ''}`,
+    );
+    this.name = 'TimeoutError';
+  }
+}
+
+// Wrapper that adds timeout to bash commands
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, command: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new TimeoutError(command, timeoutMs));
+    }, timeoutMs);
+
+    promise
+      .then((result) => {
+        clearTimeout(timer);
+        resolve(result);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+// Wrapper that adds timeout to just-bash exec calls
+function createTimeoutBash(bash: Bash, timeoutMs: number) {
+  return {
+    async exec(command: string) {
+      return withTimeout(bash.exec(command), timeoutMs, command);
+    },
+    fs: bash.fs,
+  };
+}
 
 function truncateOutput(output: string): string {
   if (output.length <= MAX_OUTPUT_CHARS) return output;
@@ -66,10 +105,13 @@ export async function runBashAgent(
   const overlay = new OverlayFs({ root: DATA_DIR });
   const bash = new Bash({ fs: overlay, cwd: overlay.getMountPoint() });
 
-  // Create bash tool with the overlay sandbox
+  // Wrap bash with timeout handling
+  const timeoutBash = createTimeoutBash(bash, COMMAND_TIMEOUT_MS);
+
+  // Create bash tool with the timeout-wrapped sandbox
   // Set destination to match overlay mount point so cwd is correct
   const { tools } = await createBashTool({
-    sandbox: bash,
+    sandbox: timeoutBash,
     destination: overlay.getMountPoint(),
     onAfterBashCall: ({ result }) => ({
       result: {
