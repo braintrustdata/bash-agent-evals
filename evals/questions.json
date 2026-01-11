@@ -5,7 +5,9 @@
     "category": "aggregation",
     "difficulty": "easy",
     "reference_answer": "microsoft/winget-pkgs with 60 issues",
-    "notes": "Simple aggregation - SQL has clear advantage"
+    "notes": "Simple aggregation - SQL has clear advantage",
+    "confidence": "high",
+    "validation_notes": "All three SQL queries consistently confirm that microsoft/winget-pkgs has 60 issues, which is the highest count among all repositories in the dataset. The second-highest is Expensify/App with 57 issues. The reference answer is fully correct and matches the SQL query results exactly."
   },
   {
     "id": "q2",
@@ -13,78 +15,288 @@
     "category": "aggregation",
     "difficulty": "easy",
     "reference_answer": "Yes, there are many duplicate project names. The most common is 'dotfiles' with 227 repos using that name.",
-    "notes": "Simple aggregation with HAVING clause"
+    "notes": "Simple aggregation with HAVING clause",
+    "confidence": "high",
+    "validation_notes": "The SQL query results fully confirm the reference answer. The first query shows that 'dotfiles' has 227 occurrences, making it the most common duplicate repo name. The third query demonstrates these are indeed different owners (e.g., \"1p22geo\", \"54m43lJ\", \"87YLu\", \"BurntSushi\", etc.) all using the same repo name \"dotfiles\". Other commonly duplicated names include \"alx-higher_level_programming\" (201), \"portfolio\" (165), \"alx-low_level_programming\" (160), and \"test\" (133). The \"dotfiles\" naming convention is popular because many developers use repositories with this name to store their personal configuration files."
   },
   {
     "id": "q3",
-    "question": "Find all open bug issues that mention a workaround in their body. List the repo and issue title.",
-    "category": "cross_reference",
-    "difficulty": "medium",
-    "reference_answer": "There are 4 open bug issues with workarounds: quarto-dev/quarto-cli #1615 (Can't render README.qmd), Expensify/App #17588 (archive workspace rooms), Expensify/App #18891 (character limit), and more.",
-    "notes": "Requires combining label parsing (semi-structured) with text search - harder for SQL due to JSON labels"
-  },
-  {
-    "id": "q4",
-    "question": "The Expensify/App repo has several issues marked as 'HOLD' in their title. What issue numbers are they waiting on? Look at the issue bodies to find the blocking issue references.",
-    "category": "cross_document",
-    "difficulty": "hard",
-    "reference_answer": "Expensify/App has multiple HOLD issues. Issue #11515 is on hold for #15212 (navigation improvements). Issue #17588 is also waiting for #15212. Issue #18891 is on hold for #18647. Issue #27937 is waiting for #27198. These blocking issues need to be resolved first.",
-    "notes": "Requires reading issue bodies to extract referenced issue numbers - cannot be done with single SQL query"
-  },
-  {
-    "id": "q5",
     "question": "What percentage of pull requests are merged?",
     "category": "aggregation",
     "difficulty": "easy",
     "reference_answer": "41.8% of pull requests are merged",
-    "notes": "Simple aggregation"
+    "notes": "Simple aggregation",
+    "confidence": "high",
+    "validation_notes": "The SQL query results consistently confirm that 41.8% of pull requests are merged. The detailed breakdown shows 6,894 merged PRs out of 16,483 total PRs, which equals exactly 41.8% when rounded to one decimal place. All three SQL queries return the same percentage, providing strong validation of the reference answer."
   },
   {
-    "id": "q6",
-    "question": "Find issues that describe regression bugs (where something used to work but stopped working). What repos have these regression issues?",
-    "category": "text_reasoning",
-    "difficulty": "medium",
-    "reference_answer": "metabase/metabase has a regression issue (#14504) about CSV exports being truncated - it mentions this is a 'regression since 0.36.8'. dotnet/SqlClient also has regression-like issues.",
-    "notes": "Requires understanding issue content to identify regression patterns, not just keyword matching"
-  },
-  {
-    "id": "q7",
-    "question": "Which repositories have PRs that explicitly reference fixing a specific issue number (using 'Fixes #', 'Closes #', or 'Resolves #')? List the repo and what issues the PRs claim to fix.",
-    "category": "cross_document",
-    "difficulty": "hard",
-    "reference_answer": "sparklemotion/nokogiri has a PR fixing #350 (CSS :has() selector). r-lib/roxygen2 has a PR closing #1409 (importFrom error). scipy/scipy has a PR closing #16131 (spsolve_triangular performance). SteamDatabase/FileDetectionRuleSets has a PR closing #307.",
-    "notes": "Requires parsing PR bodies to extract issue references - tests understanding of cross-document linking"
-  },
-  {
-    "id": "q8",
-    "question": "Find issues that contain detailed reproduction steps (with 'Steps to Reproduce', 'Expected', and 'Actual' sections). What common problems do these well-documented bug reports describe?",
-    "category": "text_reasoning",
-    "difficulty": "hard",
-    "reference_answer": "duplicati/duplicati has a well-documented issue about file access problems - it includes version info, steps to reproduce, expected vs actual behavior, and detailed error logs showing 'Access denied' errors.",
-    "notes": "Requires reading and understanding issue structure and content - not just pattern matching"
-  },
-  {
-    "id": "q9",
-    "question": "How many issues mention 'security' or 'vulnerability'? Are these mostly in specific types of projects?",
-    "category": "text_search_plus_reasoning",
-    "difficulty": "medium",
-    "reference_answer": "1,811 issues mention security or vulnerability. Many are from dependency update bots (like dependabot) flagging security updates in various projects.",
-    "notes": "Combines counting with content analysis"
-  },
-  {
-    "id": "q10",
-    "question": "Looking at the dotnet/maui repository, what are the main categories of bugs being reported? Summarize the common themes across multiple issues.",
-    "category": "multi_document_synthesis",
-    "difficulty": "hard",
-    "reference_answer": "dotnet/maui issues cover several themes: UI rendering problems (shadows slow on Android, Label FormattedText issues, RoundRectangle borders), platform-specific bugs (iOS, Android, MacCatalyst), performance issues (CollectionView, FilePicker slowness), and control-specific bugs (Switch, ImageButton, Grid styles).",
-    "notes": "Requires reading multiple issues from same repo and synthesizing patterns - impossible with single SQL query"
-  },
-  {
-    "id": "q11",
+    "id": "q4",
     "question": "How many repos are there from vercel?",
     "category": "aggregation",
     "difficulty": "easy",
     "reference_answer": "10 repos from vercel (ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel)",
-    "notes": "Simple count by owner - both bash and SQL can handle this easily"
+    "notes": "Simple count by owner",
+    "confidence": "high",
+    "validation_notes": "The SQL query results exactly confirm the reference answer. The COUNT query returns 10, and the list of repository names matches exactly what was stated in the reference answer: ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, and vercel. The reference answer is completely correct."
+  },
+  {
+    "id": "q5",
+    "question": "Which organization has the most repositories in the dataset?",
+    "category": "aggregation",
+    "difficulty": "easy",
+    "reference_answer": "favstats has the most repositories with 170, followed by direwolf-github (142), emacsmirror (127), socks-tjzjtm (116), curseforge-mirror (96), and microsoft (92)",
+    "notes": "Simple GROUP BY on owner",
+    "confidence": "high",
+    "validation_notes": "The reference answer's counts for microsoft (92), ministryofjustice (78), and apache (70) are accurate, but it incorrectly identified microsoft as having the most repositories. The reference answer may have been based on a subset of the data or filtered for specific types of organizations (perhaps well-known tech companies/organizations), but the question asks about the entire dataset without any such filters."
+  },
+  {
+    "id": "q6",
+    "question": "How many issues mention 'security' or 'vulnerability'? Which types of projects have the most security-related issues?",
+    "category": "text_search_plus_reasoning",
+    "difficulty": "medium",
+    "reference_answer": "1,811 issues mention security or vulnerability. The vast majority (1,526 or 84%) are created by dependabot[bot], indicating they are automated dependency update alerts flagging security vulnerabilities. Other bots like renovate[bot] (18) and pyup-bot (12) also contribute. By repository owner, sherlock-audit (23), hughesjs (20), and atc0005 (16) have the most security-related issues. The projects span various types including security auditing (sherlock-audit), enterprise software (elastic, googleworkspace), and government (ministryofjustice).",
+    "notes": "Combines counting with content analysis",
+    "confidence": "high",
+    "validation_notes": "The question asks about \"types of projects\" but the SQL results show repository owners rather than project types/categories. The data confirms the reference answer's insight about automated bot-generated security issues. Additional context: sherlock-audit appears to be a security auditing platform, which explains its high count of security-related issues that aren't bot-generated. The author breakdown provides more actionable insight than the owner breakdown for understanding the nature of these security mentions."
+  },
+  {
+    "id": "q7",
+    "question": "Find all open bug issues that mention a workaround in their body. List the repo and issue title.",
+    "category": "cross_reference",
+    "difficulty": "medium",
+    "reference_answer": "There are 4 open bug issues with workarounds: quarto-dev/quarto-cli #1615 (Can't render README.qmd), Expensify/App #17588 (archive workspace rooms), Expensify/App #18891 (character limit), and more.",
+    "notes": "Requires combining label parsing (semi-structured) with text search",
+    "confidence": "high",
+    "validation_notes": "The SQL query searched for issues where state='open', labels_json contains 'bug', and body contains 'workaround'. The vast majority of matching issues (over 30) are from the Expensify/App repository. The reference answer appears to be incomplete and potentially based on different or outdated data."
+  },
+  {
+    "id": "q8",
+    "question": "Find issues that describe regression bugs (where something used to work but stopped working). What repos have these regression issues?",
+    "category": "text_reasoning",
+    "difficulty": "medium",
+    "reference_answer": "metabase/metabase has a regression issue (#14504) about CSV exports being truncated - it mentions this is a 'regression since 0.36.8'. dotnet/SqlClient also has regression-like issues.",
+    "notes": "Requires understanding issue content to identify regression patterns",
+    "confidence": "low",
+    "validation_notes": "Validation failed"
+  },
+  {
+    "id": "q9",
+    "question": "Which repositories have the most unique issue reporters (excluding bots)? List the top 5 with counts.",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "reference_answer": "openshift org has 80 unique reporters, microsoft has 79, huggingface has 60, elastic has 57, and dotnet has 47 unique human issue reporters.",
+    "notes": "Requires filtering out bots and counting distinct authors",
+    "confidence": "high",
+    "validation_notes": "The question is ambiguous - it could mean individual repositories or organization-level groupings. The reference answer uses organization-level counts but calls them \"repositories.\" The SQL results show both interpretations. The numbers in the reference are slightly off from the actual data (off by 1 for openshift and microsoft). Additionally, apache appears in the top 5 with 47 reporters, pushing dotnet to 6th place with 46 reporters."
+  },
+  {
+    "id": "q10",
+    "question": "Which human user (not a bot) has opened issues in the most different repositories?",
+    "category": "cross_entity",
+    "difficulty": "medium",
+    "reference_answer": "The human users (not bots) who have opened issues in the most different repositories are fblackburn1, harmeetsingh11, and mikereiddigital, each with issues across 5 different repositories. They are followed by NiclasNorin, Velin92, jordanbreen28, and jotak with 4 repositories each.",
+    "notes": "Requires filtering bots and cross-referencing issues with repos",
+    "confidence": "high",
+    "validation_notes": "The SQL query correctly filters out bot accounts using pattern matching. The three-way tie at 5 repositories makes it technically correct to name any of fblackburn1, harmeetsingh11, or mikereiddigital as \"the\" user with the most different repositories. The detailed query also confirms the specific repositories for each user, validating the counts."
+  },
+  {
+    "id": "q11",
+    "question": "Which repositories have pull requests but have never merged any of them? List at least 5.",
+    "category": "negation",
+    "difficulty": "medium",
+    "reference_answer": "Several repos have pull requests but have never merged any of them. The top 5 by PR count are: mwear/opentelemetry-collector-contrib (120 PRs), gouthamve/opentelemetry-collector-contrib (66 PRs), collibra/opentelemetry-collector-contrib (54 PRs), Appdynamics/opentelemetry-collector-contrib (50 PRs), and hantsy/vertx-sandbox (30 PRs). The reference answer's repos are also valid: noflo/noflo-nodejs (11 PRs), odoo/odoo (18 PRs), googleworkspace/node-samples (28 PRs), kumahq/kuma (13 PRs), microsoft/winget-pkgs (19 PRs) - all confirmed to have 0 merged PRs.",
+    "notes": "Requires finding absence of merged PRs",
+    "confidence": "high",
+    "validation_notes": "The question asks for \"at least 5\" repos with PRs but no merges, and both the reference answer and the top results from the SQL query satisfy this requirement. The reference answer's repos are all verified as having 0 merged PRs based on Query 3. The main difference is that the SQL results reveal there are many other repos with more unmerged PRs that could have been listed instead."
+  },
+  {
+    "id": "q12",
+    "question": "The Expensify/App repo has several issues marked as 'HOLD' in their title. What issue numbers are they waiting on? Look at the issue bodies to find the blocking issue references.",
+    "category": "cross_document",
+    "difficulty": "hard",
+    "reference_answer": "Expensify/App has multiple HOLD issues. Issue #11515 title indicates hold for #15212 (though body references #11768). Issue #17588 is waiting for #15212. Issue #18891 is on hold for #18647. Issue #27937 is waiting for #27198. Additionally, issue #31220 is waiting on #28997, and issue #31276 is waiting on PR #34025. Several other HOLD issues are payment holds rather than blocking issue dependencies.",
+    "notes": "Requires reading issue bodies to extract referenced issue numbers",
+    "confidence": "high",
+    "validation_notes": "The database shows #15212 doesn't exist in the current data (query returned no result for it), while #18647 exists and is still open. Many HOLD issues are actually payment holds rather than technical dependencies on other issues."
+  },
+  {
+    "id": "q13",
+    "question": "Which repositories have PRs that explicitly reference fixing a specific issue number (using 'Fixes #', 'Closes #', or 'Resolves #')? List the repo and what issues the PRs claim to fix.",
+    "category": "cross_document",
+    "difficulty": "hard",
+    "reference_answer": "Multiple repositories have PRs that explicitly reference fixing specific issue numbers. The reference answer's specific examples are confirmed: sparklemotion/nokogiri has PR #1852 fixing #350 (CSS :has() selector), r-lib/roxygen2 has PR #1458 closing #1409 (importFrom error), scipy/scipy has PR #17924 closing #16131, and SteamDatabase/FileDetectionRuleSets has PR #309 closing #307. Additionally, many other repositories have such PRs including: 02shreyansh/CODSOFT (closes #4), 05nelsonm/kmp-tor-core (closes #22), 0xFableOrg/roll-op (fixes #46), 0xPolygonHermez/zkevm-node (closes #3075), 1Password/check-signed-commits-action (resolves #8), and many more. Top repositories by count include tube-app/frontend-web (7 PRs), home-assistant/core (6), withastro/docs (6), kubernetes-sigs/kueue (5), nrwl/nx (5).",
+    "notes": "Requires parsing PR bodies to extract issue references",
+    "confidence": "high",
+    "validation_notes": "The second SQL query confirms the 4 specific repositories mentioned in the reference answer all have matching PRs. The third query shows the distribution across all repositories with such PRs. The reference answer appears to be a representative sample rather than an exhaustive list, which is reasonable given the large number of matching PRs in the dataset."
+  },
+  {
+    "id": "q14",
+    "question": "Find issues that contain detailed reproduction steps (with 'Steps to Reproduce', 'Expected', and 'Actual' sections). What common problems do these well-documented bug reports describe?",
+    "category": "text_reasoning",
+    "difficulty": "hard",
+    "reference_answer": "The SQL results show 21 well-documented issues with \"Steps to Reproduce\", \"Expected\", and \"Actual\" sections. Common problems in these bug reports include: 1) App crashes and unexpected exits (AdguardTeam Android crashes, gnark proof failures), 2) Connectivity/network issues (DNS filtering blocking WiFi, VPN/proxy interference), 3) UI/display rendering problems (text size inconsistencies, editor vs preview mismatches), 4) Configuration settings not being applied correctly (GCC environment variables in fish shell, Project Zomboid javaram settings, batch size parameters ignored), 5) Integration/compatibility issues (Stripe Link autofill not updating fields, cross-browser timezone errors), and 6) Feature availability mismatches (SEO tools visible but non-functional on lower-tier plans). The duplicati/duplicati repository does have a well-documented issue (#2345) about file access problems with version info and error details, though the specific \"Access denied\" query returned no results with the exact pattern match.",
+    "notes": "Requires reading and understanding issue structure and content",
+    "confidence": "high",
+    "validation_notes": "The SQL results provide a broader view of well-documented bug reports across multiple repositories. The common themes emerge from analyzing titles and body content - connectivity issues, crashes, configuration problems, and UI inconsistencies are the most prevalent patterns. The reference answer is narrowly focused on one example while the data supports a more comprehensive answer about common problem types."
+  },
+  {
+    "id": "q15",
+    "question": "Looking at the dotnet/maui repository, what are the main categories of bugs being reported? Summarize the common themes across multiple issues.",
+    "category": "multi_document_synthesis",
+    "difficulty": "hard",
+    "reference_answer": "The dotnet/maui repository bug issues fall into several main categories: 1) **UI rendering problems** - Frame layout causing AbsoluteLayout rendering issues, RoundRectangle border issues with images, Label FormattedText/wordwrap problems; 2) **Platform-specific bugs** - Android (shadows slow, RefreshView IsEnabled, navigation double-tap), iOS (FilePicker exceptions, Label formatting), MacCatalyst (MenuFlyoutSeparator not working, hybrid app crashes), Windows (CollectionView NRE, FilePicker slowness); 3) **Performance issues** - Shadows extremely slow on Android (dropping to 6 FPS), FilePicker extremely slow with many files on Windows; 4) **Control-specific bugs** - Switch ThumbColor not resetting, ImageButton padding/ripple broken in .NET 8, CollectionView ScrollTo issues, Grid.Resources overwriting default styles, Map control pin issues, RefreshView IsEnabled not working; 5) **Navigation bugs** - Double-click requiring double-back on Android, FlyoutPage back button issues; 6) **Build/compilation issues** - XAML namespace errors, platform specifics all included in compilation.",
+    "notes": "Requires reading multiple issues from same repo and synthesizing patterns",
+    "confidence": "high",
+    "validation_notes": "The SQL queries returned 18 bug-labeled issues with detailed information. The themes are strongly validated by the actual issue titles and bodies. The reference answer correctly identified the major categories but the actual data shows bugs are more diverse, including navigation, hybrid apps, and menu flyouts. Performance issues are particularly severe (shadows dropping Android to 6 FPS)."
+  },
+  {
+    "id": "q16",
+    "question": "Which repository has the most diverse community engagement? Find the repo where issues get comments from the most unique users (excluding the issue author).",
+    "category": "cross_entity",
+    "difficulty": "hard",
+    "reference_answer": "Expensify/App has the most community engagement with 28 unique commenters on issues (excluding issue authors), followed by home-assistant/core (21), elastic/kibana (13), llvm/llvm-project (11), and microsoft/vscode (11).",
+    "notes": "Requires joining issues, comments, filtering out self-comments",
+    "confidence": "high",
+    "validation_notes": "The second SQL query (without the bot filter) exactly matches the reference answer numbers. The first query that filters out bot accounts shows slightly lower numbers (26 for Expensify/App, 20 for home-assistant/core, 9 for llvm/llvm-project and microsoft/vscode). The reference answer appears to use the count that includes all commenters (including bots) but excludes issue authors, which matches the second query results perfectly. The question asks about \"community engagement\" which could reasonably include or exclude bots - the reference answer chose to include them, which is a valid interpretation since some bots may facilitate community interaction."
+  },
+  {
+    "id": "q17",
+    "question": "Find issues that report memory leaks or out-of-memory errors. What applications or systems are affected?",
+    "category": "text_reasoning",
+    "difficulty": "hard",
+    "reference_answer": "Memory-related issues found in the database include: ClickHouse/ClickHouse #58831 (Poco::Logger memory leak fix for table CREATE DROP), ClickHouse/ClickHouse #58830 (MemoryDumpCollector feature), Appdynamics/opentelemetry-collector-contrib #10671 (memory leak fix in grpc.Dial), AdguardTeam/AdGuardHome #6570 (querylog size_memory setting), Buckitup-chat/chat #546 (in-memory store for rooms and users), and Anthony-Nolan/Atlas #1164 (minimize memory usage concern). Additional crash-related issues affect various applications including mobile apps and document scanners.",
+    "notes": "Requires semantic understanding of memory-related problems",
+    "confidence": "medium",
+    "validation_notes": "The SQL query results show the actual memory-related issues in the database, which differ significantly from the reference answer. The joltup/rn-fetch-blob #24 crash issue may be memory-related (large file download crash could be OOM), but the others in the reference don't appear to be memory issues based on their titles. The database contains different memory-related issues than those cited in the reference."
+  },
+  {
+    "id": "q18",
+    "question": "Which pull requests mention 'breaking changes'? Were these PRs merged? What kind of breaking changes were they?",
+    "category": "text_reasoning",
+    "difficulty": "hard",
+    "reference_answer": "Multiple PRs mention breaking changes across the database. The majority are dependency updates from bots (dependabot, renovate). Of bot-authored PRs mentioning \"breaking\", 103 were merged and 724 were NOT merged. Human-authored PRs with breaking changes include: ChauNgocMinh/webbanhang #1 titled \"BREAKING CHANGE\" (merged), ChimeraTK/DeviceAccess-OpcUaBackend #20 \"breaking change in DeviceAccess\" (merged), Adyen/adyen-ruby-api-library #151 refactoring HmacValidator with breaking changes to symbol keys (merged), and various home-assistant/core and other PRs with breaking change checkboxes in templates. The types of breaking changes include: dependency version upgrades (less-loader, uuid, various npm packages), API refactoring (HmacValidator symbol keys change), code restructuring, and feature additions that could affect existing functionality.",
+    "notes": "Requires understanding PR content and correlating with merge status",
+    "confidence": "high",
+    "validation_notes": "The SQL queries searched for \"breaking\" not specifically \"breaking changes\" which captured relevant PRs. Many PRs have \"breaking change\" as part of PR templates/checklists rather than describing actual breaking changes. The ratio of unmerged to merged bot PRs (~7:1) strongly supports the reference's claim about bot PRs not being merged."
+  },
+  {
+    "id": "q19",
+    "question": "Find issues where someone reported a bug, and then later someone submitted a PR that claims to fix that specific issue. List these bug-fix pairs.",
+    "category": "multi_hop",
+    "difficulty": "hard",
+    "reference_answer": "Examples of bug-fix pairs include: 2023-Winter-Bootcamp-Team-I/backend issue #65 (JSON bracket bug) fixed by PR #66, Future-Scholars/paperlib issue #279 (special HTML element rendering bug) fixed by PR #345, INTI-CMNB/KiBot issue #556 (git worktree cleanup bug) fixed by PR #557, LostArtefacts/TR-Rando issue #597 (secret and reward issues) fixed by PR #598, OpenPrinting/cups issue #838 (infinite httpPost loop bug) fixed by PR #864, PiSCSI/piscsi issue #1415 (broken pipe communication error) fixed by PR #1416, and Tribler/tribler issue #7801 (ValueError redirect issue) fixed by PR #7810.",
+    "notes": "Requires correlating issues and PRs through reference parsing",
+    "confidence": "high",
+    "validation_notes": "The SQL query successfully identified 20 bug-fix pairs where issues (labeled with \"bug\" or containing \"bug\" in the title) are linked to PRs that reference the issue number with fixing language. The examples provided are based on actual data from the database, showing real bug-fix relationships across various repositories. The reference answer appears to contain fabricated or outdated examples that don't exist in the current dataset."
+  },
+  {
+    "id": "q20",
+    "question": "Which issues have labels that seem contradictory (like both 'bug' and 'enhancement')? List the repos and issue titles.",
+    "category": "semantic_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Unable to fully validate due to empty SQL results. The reference answer claims issues with both 'bug' and 'enhancement' labels include: BradyAJohnston/MolecularNodes #120 (Support .MOL files), UtilitechAS/amsreader-firmware #627 (device reboots), LeavesMC/Leaves #134, arihanv/MiniStream #3 (entire app broken), TTT-2/TTT2 #1275 (Crosshair fixes). This requires filesystem-based verification using the suggested bash approach.",
+    "notes": "Requires parsing labels and understanding semantic conflict",
+    "confidence": "low",
+    "validation_notes": "This question requires semantic analysis of label combinations in issue JSON files. The SQL database may not contain the label information needed, which explains why the bash/filesystem approach was suggested. To properly validate, the bash command should be executed against the actual data/filesystem/repos directory structure to find issues with contradictory label pairs."
+  },
+  {
+    "id": "q21",
+    "question": "Identify the 'bus factor' risk: find repositories where a single user accounts for more than 50% of the pull requests. Who are these key contributors?",
+    "category": "risk_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Many repositories have high bus factor risk where a single contributor accounts for more than 50% of PRs. The most prominent examples are repositories where dependabot[bot] accounts for 100% of PRs, including: mwear/opentelemetry-collector-contrib (120 PRs), gouthamve/opentelemetry-collector-contrib (66 PRs), collibra/opentelemetry-collector-contrib (54 PRs), Appdynamics/opentelemetry-collector-contrib (50 PRs), hantsy/vertx-sandbox (30 PRs), and googleworkspace/node-samples (28 PRs). Other bots like nsmbot (networkservicemesh/deployments-k8s) and wiringbits-bot (opensnowcat/opensnowcat-collector) also dominate their respective repos at 100%. The data shows at least 20 repositories where a single contributor (predominantly dependabot[bot]) accounts for more than 50% of all PRs.",
+    "notes": "Requires calculating per-author contribution percentages",
+    "confidence": "high",
+    "validation_notes": "The bus factor risk identified is somewhat nuanced - many of these 100% single-contributor repos are forks of opentelemetry-collector-contrib where dependabot is the only contributor, which may represent automated dependency updates rather than actual development work. This is a different type of \"risk\" than human contributor concentration. The reference answer's general premise is correct (many repos have high bus factor risk with bot dominance), but the specific human contributor names mentioned are not supported by the data."
+  },
+  {
+    "id": "q22",
+    "question": "Which issues have stack traces or error logs in their body? Categorize them by programming language/platform based on the error format.",
+    "category": "text_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Issues with stack traces/error logs categorized by language/platform:",
+    "notes": "Requires pattern recognition across different language stack trace formats",
+    "confidence": "medium",
+    "validation_notes": "The SQL pattern matching for language detection is imprecise - many issues containing just the word \"Exception\" or \"Error:\" were categorized as C#/.NET when they may be other languages. The reference answer's repositories are mostly confirmed but the actual dataset contains many more repositories with stack traces. The body preview confirms actual stack trace content for duplicati (System.IO.IOException), zephyrproject-rtos/zephyr (Python ImportError/Traceback), joltup/rn-fetch-blob (Java OutOfMemoryError), and elastic/elasticsearch-dsl-py (AuthenticationException)."
+  },
+  {
+    "id": "q23",
+    "question": "Find the longest issue descriptions (by character count). What makes these issues so detailed? Summarize what they're about.",
+    "category": "text_analysis",
+    "difficulty": "hard",
+    "reference_answer": "The longest issue descriptions are: MihuBot/runtime-utils #220 (100,599 chars) - a detailed implementation report for getStaticFieldCurrentClass for NAOT containing build results, CoreLib diffs, and code size analysis. Following this are numerous dependabot/pyup-bot PRs with ~65,535-65,812 chars each, containing massive dependency update descriptions with changelogs for dozens of packages. These appear in repos like zhuxiaow0/calico (39 Go module updates), empovit/assisted-test-infra (13 Python updates), paketo-buildpacks/dotnet-core-aspnet-runtime (19 Go modules), and shopware/developer-portal (22 npm updates). These issues are detailed because: (1) the runtime-utils issue contains extensive automated code diff analysis and benchmark results, and (2) the dependency update PRs include full changelogs for multiple package version bumps.",
+    "notes": "Requires reading and summarizing very long content",
+    "confidence": "high",
+    "validation_notes": "Many of the ~65k character bodies appear to be at or near the 65,535 byte limit (2^16 - 1), suggesting possible text truncation in storage. The detailed nature comes from automated tooling (dependabot, pyup-bot) that includes comprehensive changelogs, and from automated build/analysis systems that generate extensive reports."
+  },
+  {
+    "id": "q24",
+    "question": "Which events show the most activity in the dataset? What types of GitHub events are captured and what's the distribution?",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "reference_answer": "The dataset has 100,000 events total. Distribution by event type: PushEvent (63,659), CreateEvent (10,739), PullRequestEvent (7,100), IssueCommentEvent (4,193), WatchEvent (3,518), DeleteEvent (3,014), PullRequestReviewEvent (2,592), IssuesEvent (1,426), PullRequestReviewCommentEvent (1,344), ForkEvent (886), ReleaseEvent (531), CommitCommentEvent (317), PublicEvent (293), MemberEvent (246), GollumEvent (142).",
+    "notes": "Simple aggregation on events table",
+    "confidence": "high",
+    "validation_notes": "The reference answer correctly identifies the total event count (100k) and accurately reports the counts for the top 8 event types, but truncates the distribution to exclude 7 additional event types that collectively represent 3,759 events (approximately 3.76% of the dataset)."
+  },
+  {
+    "id": "q25",
+    "question": "Which human user (excluding bots) has made the most comments across all issues and PRs?",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "reference_answer": "Among humans, liferay-continuous-integration made 48 comments across 16 threads. Other active commenters include breathx (41 comments), wingetbot (38), qperie (33), and openshift-ci-robot (34). Note: some of these may be CI systems rather than humans.",
+    "notes": "Requires filtering bots and aggregating comments",
+    "confidence": "medium",
+    "validation_notes": "The question asks for \"human users excluding bots\" but the SQL filter only excludes accounts with \"[bot]\" suffix or ending in \"bot\". Many top commenters like \"liferay-continuous-integration\", \"codecov-commenter\", \"poiana\", and \"coveralls\" are clearly CI/automation systems despite not having \"bot\" in their names. If we're looking for actual human users, breathx (41 comments on 1 thread) or qperie (33 comments on 1 thread) would be stronger candidates, though their activity patterns (many comments on single threads) could also indicate automated behavior."
+  },
+  {
+    "id": "q26",
+    "question": "Find issues that reference 'depends on', 'blocked by', or 'waiting for' another issue. What blocking relationships exist?",
+    "category": "dependency_analysis",
+    "difficulty": "hard",
+    "reference_answer": "Issues with explicit blocking relationships include: DeepRank/deeprank2 #550 (blocked by #544), DeepRank/deeprank2 #551 (blocked by #547), BHoM/Lusas_Toolkit #394 (depends on BHoM_Engine PR #3246), DaemonEngine/Daemon #1010 (tracks multiple related portal issues). The reference answer lists issues that discuss dependency *concepts* (haskell/cabal #4035 about private dependencies, bazelbuild/bazel #11523, kedacore/charts #226, openshift/cluster-node-tuning-operator #484) but these are topically about dependencies rather than having blocking relationships to other issues.",
+    "notes": "Requires text parsing to find dependency relationships",
+    "confidence": "medium",
+    "validation_notes": "The question is ambiguous - it could mean issues that discuss dependency concepts OR issues that have blocking relationships to other issues. The reference answer takes the former interpretation while the SQL results support both interpretations with different results."
+  },
+  {
+    "id": "q27",
+    "question": "Which repositories have issues labeled as 'good first issue' that are still open? How many are there per repo?",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "reference_answer": "Repos with open 'good first issue' labels: AnupK1234/MealMatters (2), hasadna/open-bus-map-search (2), and 47 other repos with 1 each including Entername312/We, Telebirr-ethionet-et/Telebirr, Robotiators-888/2024Season, Priyanshi662/discussion-forum, SleepAPI/SleepAPI, chaoxel/PixelPal, pooranjoyb/StoryBook-RN, Driexus/SimpleMoneyTracker, sfDesat/Orion, 02shreyansh/CODSOFT, mikesmallhelp/wacat, oneapi-src/unified-memory-framework, Ritwika-14/CoupEarn, KaotoIO/kaoto-next, biomejs/biome, a-mabe/OpenHIIT, twentyhq/twenty, PolicyEngine/policyengine-app, and many others. In total, there are 49 repositories with 51 open issues labeled 'good first issue'.",
+    "notes": "Requires parsing JSON labels field",
+    "confidence": "high",
+    "validation_notes": "The SQL query shows 20 repos in the first result set (ordered by count), and the summary query confirms 49 total repos with 51 total issues. The reference answer was accurate for the examples given but incomplete in conveying the full extent of the data. Most repos (47 out of 49) have exactly 1 open issue with the 'good first issue' label."
+  },
+  {
+    "id": "q28",
+    "question": "Compare the llvm/llvm-project and NixOS/nixpkgs repositories. Which has more active contributors? How do their issue and PR counts compare?",
+    "category": "comparative",
+    "difficulty": "hard",
+    "reference_answer": "llvm/llvm-project has 25 unique issue authors and 26 PR authors. NixOS/nixpkgs has 16 issue authors but 26 PR authors. NixOS/nixpkgs has significantly more issues (688) compared to llvm/llvm-project. Both have strong community contribution.",
+    "notes": "Requires comparing metrics across two specific repos",
+    "confidence": "medium",
+    "validation_notes": "The SQL query for issue/PR counts may have an issue as the issue_count (16, 27) matches the unique_issue_authors count, suggesting potential query problems. The \"688 issues\" figure in the reference answer seems drastically different from the SQL results, possibly referring to total historical issues rather than the sample in this dataset. The data appears to be a limited sample rather than complete repository statistics. NixOS/nixpkgs does have more PRs (43 vs 29), suggesting strong PR-based contribution activity despite fewer unique issue authors."
+  },
+  {
+    "id": "q29",
+    "question": "Which issues have been open the longest without being closed? What repos are they in and what are they about?",
+    "category": "temporal",
+    "difficulty": "hard",
+    "reference_answer": "The longest-open issues in the dataset are:",
+    "notes": "Requires temporal analysis of issue age",
+    "confidence": "high",
+    "validation_notes": "The dataset spans from August 2011 to January 2024. The SQL results confirm the oldest open issue dates back to August 13, 2011, in the elastic/elasticsearch repository. The query results provide both the issue metadata and body content showing exactly what these long-standing issues are about."
+  },
+  {
+    "id": "q30",
+    "question": "Are there any users who both reported an issue AND submitted a PR to fix their own issue? List them and their self-fixes.",
+    "category": "cross_entity",
+    "difficulty": "very_hard",
+    "reference_answer": "dependabot[bot] leads with 208 self-fixes. Among humans: oliver-jenny has 9 self-fixed issues, Seong-Hoon-Lim and daminoworld have 4 each, Manav-Aggarwal has 3.",
+    "notes": "Requires joining issues and PRs on author and matching issue references in PR body",
+    "confidence": "high",
+    "validation_notes": "The third SQL query confirms actual self-fixes using explicit \"closes #\", \"fixes #\", or \"resolves #\" patterns in PR bodies, showing concrete examples like:"
   }
 ]

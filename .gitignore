@@ -1,4 +1,9 @@
-data
+# Downloaded data files (large)
+/data
+
 node_modules
 *.swp
 *.swo
+
+# Temporary validation output
+evals/validated-questions.json

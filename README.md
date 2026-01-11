@@ -52,6 +52,7 @@ pnpm embed
 ANTHROPIC_API_KEY=sk-ant-...  # Required for Claude
 OPENAI_API_KEY=sk-...         # Required for embeddings
 BRAINTRUST_API_KEY=...        # Required for evals
+BASH_TIMEOUT_MS=10000         # Optional: bash command timeout in ms (default: 10000)
 ```
 
 ## Usage
@@ -112,14 +113,18 @@ bash-eval/
 │   │   ├── fs-tools.ts      # Filesystem tools
 │   │   ├── sql-tools.ts     # SQL query tools
 │   │   └── embedding-tools.ts # Embedding search tools
-│   ├── eval/
-│   │   └── run.eval.ts      # Braintrust eval runner
 │   └── data/
 │       ├── download.ts      # GH Archive downloader
 │       ├── transform.ts     # Data transformer
 │       └── embed.ts         # Embedding generator
 ├── evals/
-│   └── questions.json       # Eval questions with reference answers
+│   ├── questions.json       # Eval questions with reference answers
+│   ├── shared.ts            # Shared eval utilities (scorer, data loader)
+│   ├── run.eval.ts          # Run all evals
+│   ├── sql.eval.ts          # SQL agent eval
+│   ├── bash.eval.ts         # Bash agent eval
+│   ├── fs.eval.ts           # Filesystem agent eval
+│   └── embedding.eval.ts    # Embedding agent eval
 ├── data/
 │   ├── filesystem/          # Hierarchical JSON files
 │   ├── database.sqlite      # SQLite database
@@ -137,7 +142,12 @@ bash-eval/
 | `pnpm download`          | Download GH Archive data                 |
 | `pnpm transform`         | Transform to fs + SQLite                 |
 | `pnpm embed`             | Pre-compute embeddings                   |
-| `pnpm eval`              | Run Braintrust eval                      |
+| `pnpm eval`              | Run all 4 agent evals                    |
+| `pnpm eval:sql`          | Run SQL agent eval only                  |
+| `pnpm eval:bash`         | Run Bash agent eval only                 |
+| `pnpm eval:fs`           | Run Filesystem agent eval only           |
+| `pnpm eval:embedding`    | Run Embedding agent eval only            |
+| `pnpm validate`          | Validate reference answers with Opus     |
 | `pnpm lint`              | Run oxlint                               |
 | `pnpm format`            | Format code with prettier                |
 | `pnpm format:check`      | Check formatting                         |
@@ -176,3 +186,109 @@ Uses `better-sqlite3` with `createRequire` to work around native module bundling
 ### Streaming
 
 All agents use the AI SDK v6 `ToolLoopAgent.stream()` method with `fullStream` to provide real-time streaming of tool calls, results, and text output.
+
+## Question Management
+
+### Eval Questions
+
+Questions are stored in `evals/questions.json` with the following structure:
+
+```json
+{
+  "id": "q1",
+  "question": "Which project has the most issues?",
+  "category": "aggregation",
+  "difficulty": "easy",
+  "reference_answer": "microsoft/winget-pkgs with 60 issues",
+  "notes": "Simple aggregation - SQL has clear advantage",
+  "confidence": "high"
+}
+```
+
+Categories include: `aggregation`, `text_reasoning`, `cross_entity`, `multi_hop`, `temporal`, `negation`, `semantic_analysis`, and more.
+
+### Validating Reference Answers
+
+Reference answers should be validated using the validation script, which uses Claude Opus (the best available model) to cross-check answers via multiple SQL queries:
+
+```bash
+# Validate all questions
+pnpm validate
+
+# Validate a specific question
+pnpm validate --id=q5
+
+# Start validation from a specific question
+pnpm validate --start=q10
+```
+
+The validation process:
+
+1. Generates SQL queries to verify each reference answer
+2. Executes queries against the database
+3. Compares results with the reference answer
+4. Assigns confidence levels (high/medium/low)
+5. Identifies discrepancies
+
+Results are saved to `evals/validated-questions.json`.
+
+### Reconciling Validated Answers
+
+After validation, review the discrepancies and apply corrections:
+
+```bash
+# Run validation with automatic reconciliation
+pnpm validate --reconcile
+```
+
+This updates `evals/questions.json` with:
+
+- Corrected `reference_answer` for questions with discrepancies
+- `confidence` field for all validated questions
+- `validation_notes` if applicable
+
+### Adding New Questions
+
+To add new questions:
+
+1. **Add to questions.json** with a unique `id`, `question`, `category`, `difficulty`, and initial `reference_answer`
+
+2. **Validate the answer**:
+
+   ```bash
+   pnpm validate --id=qNEW
+   ```
+
+3. **Review and reconcile** if needed:
+   ```bash
+   pnpm validate --id=qNEW --reconcile
+   ```
+
+Tips for good questions:
+
+- **Easy**: Simple aggregations, counts, single-table queries
+- **Medium**: JOINs, text search, filtering bots, multiple conditions
+- **Hard**: Multi-hop reasoning, cross-document references, semantic understanding, temporal analysis
+- **Very Hard**: Require parsing text fields, following chains of references, synthesizing across many documents
+
+## Model Configuration
+
+The model used by agents can be configured via the `MODEL` environment variable:
+
+```bash
+# Default (Claude Opus 4.5)
+pnpm eval
+
+# Use a different model
+MODEL=claude-sonnet-4-5 pnpm eval
+MODEL=gpt-5 pnpm eval
+```
+
+Supported models:
+
+- `claude-opus-4-5` (default) - Best accuracy
+- `claude-sonnet-4-5` - Good balance of speed/accuracy
+- `claude-haiku-4-5` - Fastest
+- `gpt-5.1`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano` - OpenAI models
+
+The eval includes model and agent in experiment metadata for slicing results by both dimensions.

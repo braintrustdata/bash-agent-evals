@@ -4,8 +4,54 @@ import { Bash, OverlayFs } from 'just-bash';
 import { join } from 'path';
 import { createModel, getModelFromEnv, type ModelId } from '../models.js';
 
+// Max steps for agent execution (shared across all agents)
+export const MAX_STEPS = 50;
+
 const DATA_DIR = join(process.cwd(), 'data/filesystem');
 const MAX_OUTPUT_CHARS = 30000;
+const DEFAULT_TIMEOUT_MS = 10000; // 10 second default timeout
+
+// Configurable via BASH_TIMEOUT_MS env var (in milliseconds)
+export const BASH_TIMEOUT_MS =
+  parseInt(process.env.BASH_TIMEOUT_MS || '', 10) || DEFAULT_TIMEOUT_MS;
+
+class TimeoutError extends Error {
+  constructor(command: string, timeoutMs: number) {
+    super(
+      `Command timed out after ${timeoutMs / 1000}s: ${command.slice(0, 100)}${command.length > 100 ? '...' : ''}`,
+    );
+    this.name = 'TimeoutError';
+  }
+}
+
+// Wrapper that adds timeout to bash commands
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, command: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new TimeoutError(command, timeoutMs));
+    }, timeoutMs);
+
+    promise
+      .then((result) => {
+        clearTimeout(timer);
+        resolve(result);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+// Wrapper that adds timeout to just-bash exec calls
+function createTimeoutBash(bash: Bash, timeoutMs: number) {
+  return {
+    async exec(command: string) {
+      return withTimeout(bash.exec(command), timeoutMs, command);
+    },
+    fs: bash.fs,
+  };
+}
 
 function truncateOutput(output: string): string {
   if (output.length <= MAX_OUTPUT_CHARS) return output;
@@ -66,10 +112,13 @@ export async function runBashAgent(
   const overlay = new OverlayFs({ root: DATA_DIR });
   const bash = new Bash({ fs: overlay, cwd: overlay.getMountPoint() });
 
-  // Create bash tool with the overlay sandbox
+  // Wrap bash with timeout handling
+  const timeoutBash = createTimeoutBash(bash, BASH_TIMEOUT_MS);
+
+  // Create bash tool with the timeout-wrapped sandbox
   // Set destination to match overlay mount point so cwd is correct
   const { tools } = await createBashTool({
-    sandbox: bash,
+    sandbox: timeoutBash,
     destination: overlay.getMountPoint(),
     onAfterBashCall: ({ result }) => ({
       result: {
@@ -84,7 +133,7 @@ export async function runBashAgent(
     model: createModel(modelId ?? getModelFromEnv()),
     instructions: SYSTEM_PROMPT,
     tools,
-    stopWhen: stepCountIs(20),
+    stopWhen: stepCountIs(MAX_STEPS),
   });
 
   const stream = await agent.stream({
@@ -119,6 +168,15 @@ export async function runBashAgent(
       case 'error':
         throw event.error;
     }
+  }
+
+  // Check if agent ran out of steps without completing
+  const steps = await stream.steps;
+  const lastStep = steps[steps.length - 1];
+  // If we hit max steps and the last step ended with tool-calls (not a text response),
+  // the agent was still working and didn't finish
+  if (steps.length >= MAX_STEPS && lastStep?.finishReason === 'tool-calls') {
+    throw new Error(`Agent reached maximum ${MAX_STEPS} steps without producing a final answer`);
   }
 
   return {

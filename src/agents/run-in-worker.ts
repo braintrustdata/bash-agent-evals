@@ -1,9 +1,9 @@
 import { fork } from 'child_process';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import type { AgentResult, StreamCallbacks } from './bash-agent.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// Worker path relative to project root (works in both ESM and CJS contexts)
+const WORKER_PATH = join(process.cwd(), 'src/agents/worker.ts');
 
 export interface WorkerOptions {
   callbacks?: StreamCallbacks;
@@ -29,7 +29,7 @@ export function runAgentInWorker(
 
   return new Promise((resolve, reject) => {
     // Fork a child process running the worker script via tsx
-    const child = fork(join(__dirname, 'worker.ts'), [], {
+    const child = fork(WORKER_PATH, [], {
       execArgv: ['--import', 'tsx'],
       env: {
         ...process.env,

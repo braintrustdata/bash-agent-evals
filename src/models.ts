@@ -6,9 +6,9 @@ import type { LanguageModel } from 'ai';
  * Supported model identifiers (friendly names)
  */
 export type ModelId =
-  | 'claude-4.5-opus'
-  | 'claude-4.5-sonnet'
-  | 'claude-4.5-haiku'
+  | 'claude-opus-4-5'
+  | 'claude-sonnet-4-5'
+  | 'claude-haiku-4-5'
   | 'gpt-5.1'
   | 'gpt-5'
   | 'gpt-5-mini'
@@ -18,19 +18,19 @@ export type ModelId =
  * Model configuration with official API model strings
  */
 const MODEL_CONFIG: Record<ModelId, { provider: 'anthropic' | 'openai'; modelId: string }> = {
-  'claude-4.5-opus': { provider: 'anthropic', modelId: 'claude-opus-4-5-20251101' },
-  'claude-4.5-sonnet': { provider: 'anthropic', modelId: 'claude-sonnet-4-5-20250514' },
-  'claude-4.5-haiku': { provider: 'anthropic', modelId: 'claude-haiku-4-5-20251016' },
-  'gpt-5.1': { provider: 'openai', modelId: 'gpt-5.1-2025-04-14' },
-  'gpt-5': { provider: 'openai', modelId: 'gpt-5-0125' },
-  'gpt-5-mini': { provider: 'openai', modelId: 'gpt-5-mini-2025-02-06' },
-  'gpt-5-nano': { provider: 'openai', modelId: 'gpt-5-nano-2025-01-30' },
+  'claude-opus-4-5': { provider: 'anthropic', modelId: 'claude-opus-4-5' },
+  'claude-sonnet-4-5': { provider: 'anthropic', modelId: 'claude-sonnet-4-5' },
+  'claude-haiku-4-5': { provider: 'anthropic', modelId: 'claude-haiku-4-5' },
+  'gpt-5.1': { provider: 'openai', modelId: 'gpt-5.1' },
+  'gpt-5': { provider: 'openai', modelId: 'gpt-5' },
+  'gpt-5-mini': { provider: 'openai', modelId: 'gpt-5-mini' },
+  'gpt-5-nano': { provider: 'openai', modelId: 'gpt-5-nano' },
 };
 
 /**
  * Default model if none specified
  */
-export const DEFAULT_MODEL: ModelId = 'claude-4.5-opus';
+export const DEFAULT_MODEL: ModelId = 'claude-opus-4-5';
 
 /**
  * Get model from environment variable or default
