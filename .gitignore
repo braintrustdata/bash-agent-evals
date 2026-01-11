@@ -2,3 +2,6 @@ data
 node_modules
 *.swp
 *.swo
+
+# Temporary validation output
+evals/validated-questions.json
