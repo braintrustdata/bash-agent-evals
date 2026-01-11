@@ -1,4 +1,6 @@
-data
+# Downloaded data files (large)
+/data
+
 node_modules
 *.swp
 *.swo
