@@ -141,7 +141,7 @@ bash-eval/
 | `pnpm download`          | Download GH Archive data                 |
 | `pnpm transform`         | Transform to fs + SQLite                 |
 | `pnpm embed`             | Pre-compute embeddings                   |
-| `pnpm eval`              | Run all Braintrust evals                 |
+| `pnpm eval`              | Run all 4 agent evals                    |
 | `pnpm eval:sql`          | Run SQL agent eval only                  |
 | `pnpm eval:bash`         | Run Bash agent eval only                 |
 | `pnpm eval:fs`           | Run Filesystem agent eval only           |
@@ -275,19 +275,19 @@ Tips for good questions:
 The model used by agents can be configured via the `MODEL` environment variable:
 
 ```bash
-# Default (Claude 4.5 Opus)
+# Default (Claude Opus 4.5)
 pnpm eval
 
 # Use a different model
-MODEL=claude-4.5-sonnet pnpm eval
+MODEL=claude-sonnet-4-5 pnpm eval
 MODEL=gpt-5 pnpm eval
 ```
 
 Supported models:
 
-- `claude-4.5-opus` (default) - Best accuracy
-- `claude-4.5-sonnet` - Good balance of speed/accuracy
-- `claude-4.5-haiku` - Fastest
+- `claude-opus-4-5` (default) - Best accuracy
+- `claude-sonnet-4-5` - Good balance of speed/accuracy
+- `claude-haiku-4-5` - Fastest
 - `gpt-5.1`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano` - OpenAI models
 
 The eval includes model and agent in experiment metadata for slicing results by both dimensions.

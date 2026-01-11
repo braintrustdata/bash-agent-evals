@@ -9,7 +9,7 @@ const require = createRequire(join(process.cwd(), 'package.json'));
 const Database = require('better-sqlite3');
 
 // Use Opus for validation - it's the best model for accurate analysis
-const VALIDATION_MODEL = createModel('claude-4.5-opus');
+const VALIDATION_MODEL = createModel('claude-opus-4-5');
 
 const DB_PATH = join(process.cwd(), 'data/database.sqlite');
 const QUESTIONS_PATH = join(process.cwd(), 'evals/questions.json');

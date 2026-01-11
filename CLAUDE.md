@@ -8,15 +8,15 @@ This is an eval comparing 4 AI agent approaches (Bash, Filesystem, SQL, Embeddin
 
 ## Model Selection
 
-- **claude-4.5-opus** (`claude-opus-4-5-20251101`) is the best model available. Use it for:
+- **claude-opus-4-5** is the best model available. Use it for:
   - Validation tasks
   - Research and analysis
   - Any task requiring high accuracy
   - Reference answer generation
 
-- **claude-4.5-sonnet** is good for faster iteration during development and testing
+- **claude-sonnet-4-5** is good for faster iteration during development and testing
 
-- When running evals, the model can be configured via the `MODEL` env var (defaults to `claude-4.5-opus`)
+- When running evals, the model can be configured via the `MODEL` env var (defaults to `claude-opus-4-5`)
 
 ## Key Files
 

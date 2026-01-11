@@ -68,7 +68,21 @@ The submitted answer may either be a subset or superset of the expert answer, or
   model: 'gpt-4.1-mini',
 });
 
-// Helper to create task with model
+import { runAgentInWorker } from '../src/agents/run-in-worker.js';
+import type { Span } from 'braintrust';
+
+export type AgentType = 'bash' | 'fs' | 'sql' | 'embedding';
+
+// Helper to create task that runs agent in a worker process with tracing
+export const createWorkerTask =
+  (agentType: AgentType) =>
+  async (input: string, { span }: { span: Span }) => {
+    const parentSpanContext = await span.export();
+    const result = await runAgentInWorker(agentType, input, { parentSpanContext });
+    return result.answer;
+  };
+
+// Legacy: Helper to create task with model (direct call, no worker)
 export const createTask =
   (agentFn: (q: string, cb: undefined, model: ModelId) => Promise<{ answer: string }>) =>
   async (input: string) =>
