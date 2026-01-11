@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { LLMClassifierFromTemplate } from 'autoevals';
+import { LLMClassifierFromTemplate, makePartial } from 'autoevals';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { getModelFromEnv, type ModelId } from '../src/models.js';
@@ -38,9 +38,11 @@ export const data = questions.map((q) => ({
 }));
 
 // Custom Factuality scorer that doesn't penalize superset answers
-export const Factuality = LLMClassifierFromTemplate({
-  name: 'Factuality',
-  promptTemplate: `You are comparing a submitted answer to an expert answer on a given question. Here is the data:
+// Wrapped with makePartial to support .partial() for pre-binding maxTokens
+const FactualityBase = makePartial(
+  LLMClassifierFromTemplate({
+    name: 'Factuality',
+    promptTemplate: `You are comparing a submitted answer to an expert answer on a given question. Here is the data:
 [BEGIN DATA]
 **********
 [Question]: {{input}}
@@ -58,18 +60,23 @@ The submitted answer may either be a subset or superset of the expert answer, or
 (C) The submitted answer contains all the same details as the expert answer.
 (D) There is a disagreement between the submitted answer and the expert answer.
 (E) The answers differ, but these differences don't matter from the perspective of factuality.`,
-  choiceScores: {
-    A: 0.4,
-    B: 1, // Changed from 0.6 - superset answers are fully correct
-    C: 1,
-    D: 0,
-    E: 1,
-  },
-  model: 'gpt-4.1-mini',
-});
+    choiceScores: {
+      A: 0.4,
+      B: 1, // Changed from 0.6 - superset answers are fully correct
+      C: 1,
+      D: 0,
+      E: 1,
+    },
+    model: 'gpt-4.1-mini',
+  }),
+  'Factuality',
+);
+
+// Limit output tokens to prevent runaway generation and JSON parsing issues
+export const Factuality = FactualityBase.partial({ maxTokens: 500 });
 
 import { runAgentInWorker } from '../src/agents/run-in-worker.js';
-import type { Span } from 'braintrust';
+import { defaultErrorScoreHandler, type Span } from 'braintrust';
 
 export type AgentType = 'bash' | 'fs' | 'sql' | 'embedding';
 
@@ -87,5 +94,10 @@ export const createTask =
   (agentFn: (q: string, cb: undefined, model: ModelId) => Promise<{ answer: string }>) =>
   async (input: string) =>
     (await agentFn(input, undefined, model)).answer;
+
+export const scorerArgs = {
+  scores: [Factuality],
+  errorScoreHandler: defaultErrorScoreHandler,
+};
 
 export { ModelId };
