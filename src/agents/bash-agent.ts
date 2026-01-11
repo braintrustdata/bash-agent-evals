@@ -29,8 +29,14 @@ export type BashToolSet = 'all' | 'bash-only' | 'bash-read';
 
 export const BASH_TOOL_SET: BashToolSet = (process.env.BASH_TOOL_SET as BashToolSet) || 'bash-only';
 
-// Whether to include jq in available tools (for JSON processing)
-export const BASH_USE_JQ: boolean = process.env.BASH_USE_JQ === 'true';
+// Whitelist of bash commands available to the agent
+// Default: standard Unix tools for file exploration
+const DEFAULT_BASH_TOOLS = ['ls', 'grep', 'cat', 'find', 'head', 'wc'];
+
+// Parse BASH_TOOLS env var as comma-separated list, or use default
+export const BASH_TOOLS: string[] = process.env.BASH_TOOLS
+  ? process.env.BASH_TOOLS.split(',').map((t) => t.trim())
+  : DEFAULT_BASH_TOOLS;
 
 function selectTools(toolkit: BashToolkit, toolSet: BashToolSet): BashToolkit['tools'] {
   switch (toolSet) {
@@ -89,26 +95,37 @@ function truncateOutput(output: string): string {
   return `${truncated}\n\n[OUTPUT TRUNCATED: showing ${MAX_OUTPUT_CHARS.toLocaleString()} of ${output.length.toLocaleString()} characters. Use head, grep, or more specific commands to narrow results.]`;
 }
 
-function buildSystemPrompt(useJq: boolean): string {
-  const baseTools = `- ls: List directory contents
-- grep: Search for patterns in files
-- cat: Read file contents
-- find: Find files by name pattern
-- head: Show first N lines
-- wc: Count lines/words`;
+// Tool descriptions for the system prompt
+const TOOL_DESCRIPTIONS: Record<string, string> = {
+  ls: 'List directory contents',
+  grep: 'Search for patterns in files',
+  cat: 'Read file contents',
+  find: 'Find files by name pattern',
+  head: 'Show first N lines',
+  tail: 'Show last N lines',
+  wc: 'Count lines/words',
+  jq: 'Query and transform JSON files',
+  sort: 'Sort lines of text',
+  uniq: 'Filter duplicate lines',
+  awk: 'Pattern scanning and processing',
+  sed: 'Stream editor for filtering and transforming text',
+  xargs: 'Build and execute commands from input',
+  cut: 'Remove sections from lines',
+  tr: 'Translate or delete characters',
+};
 
-  const jqTool = `- jq: Query and transform JSON files`;
+function buildSystemPrompt(tools: string[]): string {
+  const toolList = tools.map((t) => `- ${t}: ${TOOL_DESCRIPTIONS[t] || 'Unix command'}`).join('\n');
 
-  const tools = useJq ? `${baseTools}\n${jqTool}` : baseTools;
+  const tips = [
+    "Use 'find' to locate files by pattern",
+    "Use 'grep -r' for recursive text search",
+    'All files are in the working directory',
+  ];
 
-  const baseTips = `When searching, consider:
-- Use 'find' to locate files by pattern
-- Use 'grep -r' for recursive text search
-- All files are in the working directory`;
-
-  const jqTip = `- Use 'jq' to extract specific fields from JSON files`;
-
-  const tips = useJq ? `${baseTips}\n${jqTip}` : baseTips;
+  if (tools.includes('jq')) {
+    tips.push("Use 'jq' to extract specific fields from JSON files");
+  }
 
   return `You are a data analyst assistant that explores GitHub event data stored in a filesystem.
 
@@ -119,11 +136,12 @@ The data is organized as follows:
 - users/{username}.json - User data with activity counts
 
 You have access to standard Unix tools via bash:
-${tools}
+${toolList}
 
 Use these tools to explore the data and answer questions. Start by understanding the directory structure, then drill down to find specific information.
 
-${tips}`;
+When searching, consider:
+${tips.map((t) => `- ${t}`).join('\n')}`;
 }
 
 export interface AgentResult {
@@ -180,7 +198,7 @@ export async function runBashAgent(
 
   const agent = new ToolLoopAgent({
     model: createModel(modelId ?? getModelFromEnv()),
-    instructions: buildSystemPrompt(BASH_USE_JQ),
+    instructions: buildSystemPrompt(BASH_TOOLS),
     tools,
     stopWhen: stepCountIs(MAX_STEPS),
   });
