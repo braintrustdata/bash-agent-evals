@@ -74,14 +74,12 @@ You have access to standard Unix tools via bash:
 - find: Find files by name pattern
 - head: Show first N lines
 - wc: Count lines/words
-- jq: Query JSON files
 
 Use these tools to explore the data and answer questions. Start by understanding the directory structure, then drill down to find specific information.
 
 When searching, consider:
 - Use 'find' to locate files by pattern
 - Use 'grep -r' for recursive text search
-- Use 'jq' to extract specific JSON fields
 - All files are in the working directory`;
 
 export interface AgentResult {
