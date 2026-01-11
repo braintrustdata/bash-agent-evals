@@ -1,5 +1,5 @@
 import { ToolLoopAgent, stepCountIs } from '../tracing.js';
-import { createBashTool } from 'bash-tool';
+import { createBashTool, type BashToolkit } from 'bash-tool';
 import { Bash, OverlayFs } from 'just-bash';
 import { join } from 'path';
 import { createModel, getModelFromEnv, type ModelId } from '../models.js';
@@ -14,6 +14,36 @@ const DEFAULT_TIMEOUT_MS = 10000; // 10 second default timeout
 // Configurable via BASH_TIMEOUT_MS env var (in milliseconds)
 export const BASH_TIMEOUT_MS =
   parseInt(process.env.BASH_TIMEOUT_MS || '', 10) || DEFAULT_TIMEOUT_MS;
+
+// Execution limits for just-bash (increased from defaults for large datasets)
+const EXECUTION_LIMITS = {
+  maxCallDepth: 200,
+  maxCommandCount: 50000,
+  maxLoopIterations: 50000,
+  maxAwkIterations: 50000,
+  maxSedIterations: 50000,
+};
+
+// Tool configurations - which tools to expose to the agent
+export type BashToolSet = 'all' | 'bash-only' | 'bash-read';
+
+export const BASH_TOOL_SET: BashToolSet = (process.env.BASH_TOOL_SET as BashToolSet) || 'bash-only';
+
+// Whether to include jq in available tools (for JSON processing)
+export const BASH_USE_JQ: boolean = process.env.BASH_USE_JQ === 'true';
+
+function selectTools(toolkit: BashToolkit, toolSet: BashToolSet): BashToolkit['tools'] {
+  switch (toolSet) {
+    case 'bash-only':
+      // Return only bash tool, cast to satisfy type (other tools are optional at runtime)
+      return { bash: toolkit.tools.bash } as BashToolkit['tools'];
+    case 'bash-read':
+      return { bash: toolkit.tools.bash, readFile: toolkit.tools.readFile } as BashToolkit['tools'];
+    case 'all':
+    default:
+      return toolkit.tools;
+  }
+}
 
 class TimeoutError extends Error {
   constructor(command: string, timeoutMs: number) {
@@ -59,7 +89,28 @@ function truncateOutput(output: string): string {
   return `${truncated}\n\n[OUTPUT TRUNCATED: showing ${MAX_OUTPUT_CHARS.toLocaleString()} of ${output.length.toLocaleString()} characters. Use head, grep, or more specific commands to narrow results.]`;
 }
 
-const SYSTEM_PROMPT = `You are a data analyst assistant that explores GitHub event data stored in a filesystem.
+function buildSystemPrompt(useJq: boolean): string {
+  const baseTools = `- ls: List directory contents
+- grep: Search for patterns in files
+- cat: Read file contents
+- find: Find files by name pattern
+- head: Show first N lines
+- wc: Count lines/words`;
+
+  const jqTool = `- jq: Query and transform JSON files`;
+
+  const tools = useJq ? `${baseTools}\n${jqTool}` : baseTools;
+
+  const baseTips = `When searching, consider:
+- Use 'find' to locate files by pattern
+- Use 'grep -r' for recursive text search
+- All files are in the working directory`;
+
+  const jqTip = `- Use 'jq' to extract specific fields from JSON files`;
+
+  const tips = useJq ? `${baseTips}\n${jqTip}` : baseTips;
+
+  return `You are a data analyst assistant that explores GitHub event data stored in a filesystem.
 
 The data is organized as follows:
 - repos/{owner}/{repo}/repo.json - Repository metadata
@@ -68,19 +119,12 @@ The data is organized as follows:
 - users/{username}.json - User data with activity counts
 
 You have access to standard Unix tools via bash:
-- ls: List directory contents
-- grep: Search for patterns in files
-- cat: Read file contents
-- find: Find files by name pattern
-- head: Show first N lines
-- wc: Count lines/words
+${tools}
 
 Use these tools to explore the data and answer questions. Start by understanding the directory structure, then drill down to find specific information.
 
-When searching, consider:
-- Use 'find' to locate files by pattern
-- Use 'grep -r' for recursive text search
-- All files are in the working directory`;
+${tips}`;
+}
 
 export interface AgentResult {
   answer: string;
@@ -108,14 +152,18 @@ export async function runBashAgent(
 
   // Use OverlayFs to read from real disk (writes stay in memory)
   const overlay = new OverlayFs({ root: DATA_DIR });
-  const bash = new Bash({ fs: overlay, cwd: overlay.getMountPoint() });
+  const bash = new Bash({
+    fs: overlay,
+    cwd: overlay.getMountPoint(),
+    executionLimits: EXECUTION_LIMITS,
+  });
 
   // Wrap bash with timeout handling
   const timeoutBash = createTimeoutBash(bash, BASH_TIMEOUT_MS);
 
   // Create bash tool with the timeout-wrapped sandbox
   // Set destination to match overlay mount point so cwd is correct
-  const { tools } = await createBashTool({
+  const toolkit = await createBashTool({
     sandbox: timeoutBash,
     destination: overlay.getMountPoint(),
     onAfterBashCall: ({ result }) => ({
@@ -127,9 +175,12 @@ export async function runBashAgent(
     }),
   });
 
+  // Select which tools to expose based on configuration
+  const tools = selectTools(toolkit, BASH_TOOL_SET);
+
   const agent = new ToolLoopAgent({
     model: createModel(modelId ?? getModelFromEnv()),
-    instructions: SYSTEM_PROMPT,
+    instructions: buildSystemPrompt(BASH_USE_JQ),
     tools,
     stopWhen: stepCountIs(MAX_STEPS),
   });
