@@ -8,4 +8,5 @@ node_modules
 # Temporary validation output
 evals/validated-questions.json
 .vercel
+.env
 .env*.local

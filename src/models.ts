@@ -1,4 +1,6 @@
-import { type LanguageModel, gateway } from 'ai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
+import type { LanguageModel } from 'ai';
 
 /**
  * Supported model identifiers (friendly names)
@@ -66,5 +68,9 @@ export function createModel(modelId: ModelId): LanguageModel {
     );
   }
 
-  return gateway(config.provider + '/' + config.modelId);
+  if (config.provider === 'anthropic') {
+    return anthropic(config.modelId);
+  } else {
+    return openai(config.modelId);
+  }
 }
