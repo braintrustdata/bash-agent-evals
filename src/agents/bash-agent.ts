@@ -127,6 +127,69 @@ function buildSystemPrompt(tools: string[]): string {
     tips.push("Use 'jq' to extract specific fields from JSON files");
   }
 
+  const jsonSchemas = `
+## JSON Schemas
+
+### repos/{owner}/{repo}/repo.json
+{ "id": number, "owner": string, "name": string, "full_name": "{owner}/{name}" }
+
+### repos/{owner}/{repo}/issues/{number}.json
+{ "id": number, "number": number, "title": string, "body": string,
+  "state": "open"|"closed", "author": string, "labels": ["bug", "enhancement", ...],
+  "created_at": "ISO8601", "updated_at": "ISO8601", "closed_at": "ISO8601"|null,
+  "comments": [{ "id": number, "body": string, "author": string, "created_at": "ISO8601" }] }
+
+### repos/{owner}/{repo}/pulls/{number}.json
+{ "id": number, "number": number, "title": string, "body": string,
+  "state": "open"|"closed", "author": string, "merged_at": "ISO8601"|null,
+  "created_at": "ISO8601", "updated_at": "ISO8601",
+  "comments": [{ "id": number, "body": string, "author": string, "created_at": "ISO8601" }] }
+
+### users/{username}.json
+{ "id": number, "login": string, "issues_opened": number, "prs_opened": number, "comments_made": number }`;
+
+  const jqExamples = tools.includes('jq')
+    ? `
+## jq Examples
+
+# Count files by directory (aggregation)
+find repos -path "*/issues/*.json" | cut -d/ -f2-3 | sort | uniq -c | sort -rn | head
+
+# Aggregate across all files with jq -s (slurp)
+find repos -path "*/pulls/*.json" -exec cat {} \\; | jq -s 'length'
+
+# Filter by field value
+find repos -path "*/pulls/*.json" -exec cat {} \\; | jq -s '[.[] | select(.merged_at != null)]'
+
+# Filter by label
+find repos -path "*/issues/*.json" -exec cat {} \\; | jq -s '[.[] | select(.labels[]? == "bug")]'
+
+# Filter by state
+find repos -path "*/issues/*.json" -exec cat {} \\; | jq -s '[.[] | select(.state == "open")] | length'
+
+# Text search with grep, then parse with jq
+grep -rl "keyword" repos/*/issues/ | xargs -I{} cat {} | jq -s 'length'
+
+# Regex match in body/title
+find repos -path "*/pulls/*.json" -exec cat {} \\; | jq -s '[.[] | select(.body | test("pattern"; "i"))]'
+
+# Exclude bots (authors ending in [bot])
+find repos -path "*/issues/*.json" -exec cat {} \\; | jq -s '[.[] | select(.author | test("\\\\[bot\\\\]$") | not)]'
+
+# Group by field and count
+find repos -path "*/pulls/*.json" -exec cat {} \\; | jq -r '.author' | sort | uniq -c | sort -rn
+
+# Count unique values
+find repos -path "*/issues/*.json" -exec cat {} \\; | jq -rs '[.[].author] | unique | length'
+
+# Sort by date field
+find repos -path "*/issues/*.json" -exec cat {} \\; | jq -s 'sort_by(.created_at) | .[0:5]'
+
+# Extract nested array data (comments)
+cat repos/owner/repo/issues/1.json | jq '.comments[].author'
+`
+    : '';
+
   return `You are a data analyst assistant that explores GitHub event data stored in a filesystem.
 
 The data is organized as follows:
@@ -134,7 +197,8 @@ The data is organized as follows:
 - repos/{owner}/{repo}/issues/{number}.json - Issue data with title, body, state, labels, comments
 - repos/{owner}/{repo}/pulls/{number}.json - Pull request data with title, body, state, merged status, comments
 - users/{username}.json - User data with activity counts
-
+${jsonSchemas}
+${jqExamples}
 You have access to standard Unix tools via bash:
 ${toolList}
 
