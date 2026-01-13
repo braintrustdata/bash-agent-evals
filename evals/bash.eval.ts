@@ -17,5 +17,6 @@ Eval('bash-evals', {
   },
   data,
   task: createWorkerTask('bash'),
+  maxConcurrency: 5, // Run 5 evals at a time
   ...scorerArgs,
 });

@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config(); // Also load .env as fallback
+
 import { initLogger, wrapAISDK } from 'braintrust';
 import * as ai from 'ai';
 

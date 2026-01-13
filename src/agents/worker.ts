@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config(); // Also load .env as fallback
+
 import { traced, logger } from '../tracing.js';
 
 // Get agent type and question from environment variables (set by parent process)

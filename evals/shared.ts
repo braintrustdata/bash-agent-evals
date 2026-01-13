@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config(); // Also load .env as fallback
+
 import { LLMClassifierFromTemplate } from 'autoevals';
 import { readFileSync } from 'fs';
 import { join } from 'path';

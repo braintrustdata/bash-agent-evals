@@ -5,7 +5,7 @@ import { join } from 'path';
 import { createModel, getModelFromEnv, type ModelId } from '../models.js';
 
 // Max steps for agent execution (shared across all agents)
-export const MAX_STEPS = 50;
+export const MAX_STEPS = 100;
 
 const DATA_DIR = join(process.cwd(), 'data/filesystem');
 const MAX_OUTPUT_CHARS = 30000;
@@ -129,6 +129,8 @@ function buildSystemPrompt(tools: string[]): string {
 
   return `You are a data analyst assistant that explores GitHub event data stored in a filesystem.
 
+IMPORTANT: You are already in the data directory. Do NOT use "cd" commands - all paths are relative to the current working directory.
+
 The data is organized as follows:
 - repos/{owner}/{repo}/repo.json - Repository metadata
 - repos/{owner}/{repo}/issues/{number}.json - Issue data with title, body, state, labels, comments
@@ -169,10 +171,11 @@ export async function runBashAgent(
   let toolCallCount = 0;
 
   // Use OverlayFs to read from real disk (writes stay in memory)
-  const overlay = new OverlayFs({ root: DATA_DIR });
+  // Mount at "/" so the agent sees clean paths like "repos/", "users/"
+  const overlay = new OverlayFs({ root: DATA_DIR, mountPoint: '/' });
   const bash = new Bash({
     fs: overlay,
-    cwd: overlay.getMountPoint(),
+    cwd: '/',
     executionLimits: EXECUTION_LIMITS,
   });
 
@@ -180,10 +183,10 @@ export async function runBashAgent(
   const timeoutBash = createTimeoutBash(bash, BASH_TIMEOUT_MS);
 
   // Create bash tool with the timeout-wrapped sandbox
-  // Set destination to match overlay mount point so cwd is correct
+  // Set destination to "/" to match the overlay mount point
   const toolkit = await createBashTool({
     sandbox: timeoutBash,
-    destination: overlay.getMountPoint(),
+    destination: '/',
     onAfterBashCall: ({ result }) => ({
       result: {
         ...result,

@@ -7,4 +7,5 @@ Eval('bash-evals', {
   data,
   task: createWorkerTask('sql'),
   ...scorerArgs,
+  maxConcurrency: 5, // Run 5 evals at a time
 });
