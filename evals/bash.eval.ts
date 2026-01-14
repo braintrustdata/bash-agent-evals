@@ -1,8 +1,7 @@
 import { Eval } from 'braintrust';
-import { model, data, createWorkerTask, scorerArgs, MAX_STEPS } from './shared.js';
+import { model, data, createWorkerTask, scorerArgs, MAX_CONCURRENCY, MAX_STEPS } from './shared.js';
 import { BASH_TIMEOUT_MS, BASH_TOOL_SET, BASH_TOOLS } from '../src/agents/bash-agent.js';
 
-// Include tools in experiment name if custom BASH_TOOLS env var is set
 const toolsSuffix = process.env.BASH_TOOLS ? `-${BASH_TOOLS.join('+')}` : '';
 
 Eval('bash-evals', {
@@ -17,6 +16,6 @@ Eval('bash-evals', {
   },
   data,
   task: createWorkerTask('bash'),
-  maxConcurrency: 5, // Run 5 evals at a time
+  maxConcurrency: MAX_CONCURRENCY,
   ...scorerArgs,
 });

@@ -1,5 +1,5 @@
 import { Eval } from 'braintrust';
-import { model, data, createWorkerTask, scorerArgs, MAX_STEPS } from './shared.js';
+import { model, data, createWorkerTask, scorerArgs, MAX_CONCURRENCY, MAX_STEPS } from './shared.js';
 import { BASH_SQLITE_TIMEOUT_MS, BASH_SQLITE_TOOLS } from '../src/agents/bash-sqlite-agent.js';
 
 Eval('bash-evals', {
@@ -13,6 +13,6 @@ Eval('bash-evals', {
   },
   data,
   task: createWorkerTask('bash-sqlite'),
-  maxConcurrency: 5, // Run 5 evals at a time
+  maxConcurrency: MAX_CONCURRENCY,
   ...scorerArgs,
 });
