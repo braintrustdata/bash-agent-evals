@@ -31,13 +31,13 @@
   },
   {
     "id": "q4",
-    "question": "How many repos are there from vercel?",
+    "question": "How many repos are there from vercel? List them.",
     "category": "aggregation",
     "difficulty": "easy",
-    "reference_answer": "10 repos from vercel (ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel)",
-    "notes": "Simple count by owner",
+    "reference_answer": "10 repos from vercel: ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel",
+    "notes": "Simple count by owner with listing",
     "confidence": "high",
-    "validation_notes": "The SQL query results exactly confirm the reference answer. The COUNT query returns 10, and the list of repository names matches exactly what was stated in the reference answer: ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, and vercel. The reference answer is completely correct."
+    "validation_notes": "Verified: 10 repos from vercel owner."
   },
   {
     "id": "q5",
@@ -51,13 +51,13 @@
   },
   {
     "id": "q6",
-    "question": "How many issues mention 'security' or 'vulnerability' in their title or body (not in comments)? Which types of projects have the most security-related issues?",
+    "question": "How many issues mention 'security' or 'vulnerability' in their title or body? Which types of projects have the most security-related issues?",
     "category": "text_search_plus_reasoning",
     "difficulty": "medium",
     "reference_answer": "1,811 issues mention security or vulnerability in their title or body. The vast majority (1,526 or 84%) are created by dependabot[bot], indicating they are automated dependency update alerts flagging security vulnerabilities. Other bots like renovate[bot] (18) and pyup-bot (12) also contribute. By repository owner, sherlock-audit (23), hughesjs (20), and atc0005 (16) have the most security-related issues. The projects span various types including security auditing (sherlock-audit), enterprise software (elastic, googleworkspace), and government (ministryofjustice).",
-    "notes": "Search ONLY the title and body fields, NOT comments. Using grep on the whole JSON file will overcount (2,208) because it matches comments too. Use jq to parse: jq '(.title + \" \" + (.body // \"\")) | test(\"security|vulnerability\"; \"i\")'",
+    "notes": "Search title and body fields only, not comments",
     "confidence": "high",
-    "validation_notes": "Correct count is 1,811 (title+body only). Grep on whole file returns 2,208 (includes comments). The difference (397) comes from issues where security/vulnerability appears only in comments, not in title or body."
+    "validation_notes": "Correct count is 1,811 (title+body only). Grep on whole JSON file returns 2,208 (includes comments)."
   },
   {
     "id": "q7",
@@ -241,13 +241,13 @@
   },
   {
     "id": "q25",
-    "question": "Which human user (excluding bots) has made the most comments across all issues and PRs?",
+    "question": "Which human user (excluding bots and CI systems) has made the most comments across all issues and PRs?",
     "category": "aggregation",
     "difficulty": "medium",
-    "reference_answer": "Among humans, liferay-continuous-integration made 48 comments across 16 threads. Other active commenters include breathx (41 comments), wingetbot (38), qperie (33), and openshift-ci-robot (34). Note: some of these may be CI systems rather than humans.",
-    "notes": "Requires filtering bots and aggregating comments",
-    "confidence": "medium",
-    "validation_notes": "The question asks for \"human users excluding bots\" but the SQL filter only excludes accounts with \"[bot]\" suffix or ending in \"bot\". Many top commenters like \"liferay-continuous-integration\", \"codecov-commenter\", \"poiana\", and \"coveralls\" are clearly CI/automation systems despite not having \"bot\" in their names. If we're looking for actual human users, breathx (41 comments on 1 thread) or qperie (33 comments on 1 thread) would be stronger candidates, though their activity patterns (many comments on single threads) could also indicate automated behavior."
+    "reference_answer": "breathx has made the most comments with 41 comments. Other active human commenters include qperie (33 comments), Walavouchey (20), bastian-purrer (20), and blazejkustra (20). Note: accounts like liferay-continuous-integration (48), codecov-commenter (34), coveralls (23), and poiana (27) are CI/automation systems and should be excluded.",
+    "notes": "Requires filtering bots AND CI systems (e.g., accounts with 'ci', 'continuous-integration', 'codecov', 'coveralls' in name)",
+    "confidence": "high",
+    "validation_notes": "Top commenters after excluding bots and CI systems: breathx (41), qperie (33), Walavouchey (20), bastian-purrer (20), blazejkustra (20). CI systems to exclude: liferay-continuous-integration, codecov-commenter, poiana, coveralls, openshift-ci-robot, wingetbot."
   },
   {
     "id": "q26",

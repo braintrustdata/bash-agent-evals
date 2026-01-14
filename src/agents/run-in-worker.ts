@@ -15,7 +15,7 @@ function isStreamCallbacks(obj: unknown): obj is StreamCallbacks {
 }
 
 export function runAgentInWorker(
-  agentType: 'bash' | 'fs' | 'sql' | 'embedding',
+  agentType: 'bash' | 'bash-sqlite' | 'fs' | 'sql' | 'embedding',
   question: string,
   options?: WorkerOptions | StreamCallbacks,
 ): Promise<AgentResult> {

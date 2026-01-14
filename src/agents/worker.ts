@@ -18,6 +18,10 @@ async function run() {
       const { runBashAgent } = await import('./bash-agent.js');
       runAgent = runBashAgent;
       break;
+    case 'bash-sqlite':
+      const { runBashSqliteAgent } = await import('./bash-sqlite-agent.js');
+      runAgent = runBashSqliteAgent;
+      break;
     case 'fs':
       const { runFsAgent } = await import('./fs-agent.js');
       runAgent = runFsAgent;
