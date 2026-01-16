@@ -5,12 +5,14 @@ import { runBashAgent, type StreamCallbacks } from './agents/bash-agent.js';
 import { runFsAgent } from './agents/fs-agent.js';
 import { runSqlAgent } from './agents/sql-agent.js';
 import { runEmbeddingAgent } from './agents/embedding-agent.js';
+import { runCodemodeAgent } from './agents/codemode-agent.js';
 
 const AGENTS = {
   bash: { name: 'Bash', fn: runBashAgent, color: chalk.blue },
   fs: { name: 'Filesystem', fn: runFsAgent, color: chalk.green },
   sql: { name: 'SQL', fn: runSqlAgent, color: chalk.yellow },
   embedding: { name: 'Embedding', fn: runEmbeddingAgent, color: chalk.magenta },
+  codemode: { name: 'Codemode', fn: runCodemodeAgent, color: chalk.cyan },
 } as const;
 
 type AgentKey = keyof typeof AGENTS;
@@ -21,7 +23,7 @@ async function main() {
   if (args.length < 2) {
     console.log(chalk.bold('Usage: pnpm debug <agent> <question>'));
     console.log();
-    console.log('Agents: bash, fs, sql, embedding');
+    console.log('Agents: bash, fs, sql, embedding, codemode');
     console.log();
     console.log('Example:');
     console.log('  pnpm debug fs "which project has the most issues?"');
