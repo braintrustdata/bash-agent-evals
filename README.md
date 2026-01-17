@@ -44,6 +44,9 @@ pnpm transform
 
 # Pre-compute embeddings for vector search (~28k items)
 pnpm embed
+
+# Transform data for codemode agent
+pnpm transform:codemode
 ```
 
 ## Environment Variables
