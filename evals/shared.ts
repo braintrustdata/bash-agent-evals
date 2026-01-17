@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config(); // Also load .env as fallback
+
 import { LLMClassifierFromTemplate } from 'autoevals';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -111,7 +114,7 @@ export const Factuality = async (args: {
 import { runAgentInWorker } from '../src/agents/run-in-worker.js';
 import { defaultErrorScoreHandler, type Span } from 'braintrust';
 
-export type AgentType = 'bash' | 'fs' | 'sql' | 'embedding';
+export type AgentType = 'bash' | 'bash-sqlite' | 'fs' | 'sql' | 'embedding';
 
 // Helper to create task that runs agent in a worker process with tracing
 export const createWorkerTask =
@@ -127,6 +130,9 @@ export const createTask =
   (agentFn: (q: string, cb: undefined, model: ModelId) => Promise<{ answer: string }>) =>
   async (input: string) =>
     (await agentFn(input, undefined, model)).answer;
+
+// Shared eval configuration
+export const MAX_CONCURRENCY = 5;
 
 export const scorerArgs = {
   scores: [Factuality],

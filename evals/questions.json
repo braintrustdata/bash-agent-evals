@@ -21,23 +21,23 @@
   },
   {
     "id": "q3",
-    "question": "What percentage of pull requests are merged?",
+    "question": "What percentage of pull requests are merged? (Note: count all PR files as the total, including open PRs that may not have a merged field)",
     "category": "aggregation",
     "difficulty": "easy",
-    "reference_answer": "41.8% of pull requests are merged",
-    "notes": "Simple aggregation",
+    "reference_answer": "41.8% of pull requests are merged (6,894 merged out of 16,483 total)",
+    "notes": "Simple aggregation. Filesystem note: some open PRs don't have a 'merged' field - count all PR files as total, not just those with merged: true/false.",
     "confidence": "high",
-    "validation_notes": "The SQL query results consistently confirm that 41.8% of pull requests are merged. The detailed breakdown shows 6,894 merged PRs out of 16,483 total PRs, which equals exactly 41.8% when rounded to one decimal place. All three SQL queries return the same percentage, providing strong validation of the reference answer."
+    "validation_notes": "Total PRs: 16,483. Merged (merged=true): 6,894. Some open PRs (1,408) don't have a merged field at all - these should be counted in the total but not as merged."
   },
   {
     "id": "q4",
-    "question": "How many repos are there from vercel?",
+    "question": "How many repos are there from vercel? List them.",
     "category": "aggregation",
     "difficulty": "easy",
-    "reference_answer": "10 repos from vercel (ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel)",
-    "notes": "Simple count by owner",
+    "reference_answer": "10 repos from vercel: ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, vercel",
+    "notes": "Simple count by owner with listing",
     "confidence": "high",
-    "validation_notes": "The SQL query results exactly confirm the reference answer. The COUNT query returns 10, and the list of repository names matches exactly what was stated in the reference answer: ai, ai-chatbot, commerce, hyper, next.js, nft, storage, swr, turbo, and vercel. The reference answer is completely correct."
+    "validation_notes": "Verified: 10 repos from vercel owner."
   },
   {
     "id": "q5",
@@ -51,13 +51,13 @@
   },
   {
     "id": "q6",
-    "question": "How many issues mention 'security' or 'vulnerability'? Which types of projects have the most security-related issues?",
+    "question": "How many issues mention 'security' or 'vulnerability' in their title or body? Which types of projects have the most security-related issues?",
     "category": "text_search_plus_reasoning",
     "difficulty": "medium",
-    "reference_answer": "1,811 issues mention security or vulnerability. The vast majority (1,526 or 84%) are created by dependabot[bot], indicating they are automated dependency update alerts flagging security vulnerabilities. Other bots like renovate[bot] (18) and pyup-bot (12) also contribute. By repository owner, sherlock-audit (23), hughesjs (20), and atc0005 (16) have the most security-related issues. The projects span various types including security auditing (sherlock-audit), enterprise software (elastic, googleworkspace), and government (ministryofjustice).",
-    "notes": "Combines counting with content analysis",
+    "reference_answer": "1,811 issues mention security or vulnerability in their title or body. The vast majority (1,526 or 84%) are created by dependabot[bot], indicating they are automated dependency update alerts flagging security vulnerabilities. Other bots like renovate[bot] (18) and pyup-bot (12) also contribute. By repository owner, sherlock-audit (23), hughesjs (20), and atc0005 (16) have the most security-related issues. The projects span various types including security auditing (sherlock-audit), enterprise software (elastic, googleworkspace), and government (ministryofjustice).",
+    "notes": "Search title and body fields only, not comments",
     "confidence": "high",
-    "validation_notes": "The question asks about \"types of projects\" but the SQL results show repository owners rather than project types/categories. The data confirms the reference answer's insight about automated bot-generated security issues. Additional context: sherlock-audit appears to be a security auditing platform, which explains its high count of security-related issues that aren't bot-generated. The author breakdown provides more actionable insight than the owner breakdown for understanding the nature of these security mentions."
+    "validation_notes": "Correct count is 1,811 (title+body only). Grep on whole JSON file returns 2,208 (includes comments)."
   },
   {
     "id": "q7",
@@ -74,20 +74,20 @@
     "question": "Find issues that describe regression bugs (where something used to work but stopped working). What repos have these regression issues?",
     "category": "text_reasoning",
     "difficulty": "medium",
-    "reference_answer": "metabase/metabase has a regression issue (#14504) about CSV exports being truncated - it mentions this is a 'regression since 0.36.8'. dotnet/SqlClient also has regression-like issues.",
-    "notes": "Requires understanding issue content to identify regression patterns",
-    "confidence": "low",
-    "validation_notes": "Validation failed"
+    "reference_answer": "Multiple repos have issues labeled as regressions or describing regression behavior. Key examples include: metabase/metabase #14504 (CSV timestamp exports truncated, labeled regression), dotnet/maui #19867 and #19882 (Label FormattedText and Grid.Resources regressions), MetaMask/metamask-extension #22313/#22315 (contract deployment and network alert regressions), flutter/flutter #84556 (BottomNavigationBar regression), godotengine/godot #66684 (macOS editor window dragging regression), pytorch/pytorch #117465 (Apple MPS regression), vuejs/core #10114 (Reactive fails on 3.4.13), rancher/rancher #44049 (Fleet-agent panics), nextcloud/android #11974 (file upload conflicts after update), and dotnet/sdk #38013 (APICompat regression).",
+    "notes": "Look for issues with 'regression' labels, or text patterns like 'regression since', 'this used to work', 'stopped working after update'",
+    "confidence": "high",
+    "validation_notes": "Database contains 28+ issues with explicit 'regression' labels across repos like MetaMask, dotnet/maui, flutter, godot, metabase, pytorch, vuejs, rancher, and nextcloud. Additional issues mention regression patterns in their body text."
   },
   {
     "id": "q9",
-    "question": "Which repositories have the most unique issue reporters (excluding bots)? List the top 5 with counts.",
+    "question": "Which orgs have the most unique issue reporters (excluding bots)? List the top 5 with counts.",
     "category": "aggregation",
     "difficulty": "medium",
-    "reference_answer": "openshift org has 80 unique reporters, microsoft has 79, huggingface has 60, elastic has 57, and dotnet has 47 unique human issue reporters.",
-    "notes": "Requires filtering out bots and counting distinct authors",
+    "reference_answer": "openshift has 79 unique reporters, microsoft has 78, huggingface has 60, elastic has 57, and apache has 47 unique human issue reporters.",
+    "notes": "Requires filtering out bots and counting distinct authors grouped by org/owner",
     "confidence": "high",
-    "validation_notes": "The question is ambiguous - it could mean individual repositories or organization-level groupings. The reference answer uses organization-level counts but calls them \"repositories.\" The SQL results show both interpretations. The numbers in the reference are slightly off from the actual data (off by 1 for openshift and microsoft). Additionally, apache appears in the top 5 with 47 reporters, pushing dotnet to 6th place with 46 reporters."
+    "validation_notes": "Top 5 orgs by unique non-bot issue reporters: openshift (79), microsoft (78), huggingface (60), elastic (57), apache (47). dotnet is 6th with 46 reporters."
   },
   {
     "id": "q10",
@@ -101,13 +101,13 @@
   },
   {
     "id": "q11",
-    "question": "Which repositories have pull requests but have never merged any of them? List at least 5.",
+    "question": "Which repositories have the most pull requests but have never merged any of them? List the top 5 by PR count.",
     "category": "negation",
     "difficulty": "medium",
-    "reference_answer": "Several repos have pull requests but have never merged any of them. The top 5 by PR count are: mwear/opentelemetry-collector-contrib (120 PRs), gouthamve/opentelemetry-collector-contrib (66 PRs), collibra/opentelemetry-collector-contrib (54 PRs), Appdynamics/opentelemetry-collector-contrib (50 PRs), and hantsy/vertx-sandbox (30 PRs). The reference answer's repos are also valid: noflo/noflo-nodejs (11 PRs), odoo/odoo (18 PRs), googleworkspace/node-samples (28 PRs), kumahq/kuma (13 PRs), microsoft/winget-pkgs (19 PRs) - all confirmed to have 0 merged PRs.",
-    "notes": "Requires finding absence of merged PRs",
+    "reference_answer": "The top 5 repos with the most PRs but zero merges are: mwear/opentelemetry-collector-contrib (120 PRs), gouthamve/opentelemetry-collector-contrib (66 PRs), collibra/opentelemetry-collector-contrib (54 PRs), Appdynamics/opentelemetry-collector-contrib (50 PRs), and hantsy/vertx-sandbox (30 PRs).",
+    "notes": "Requires finding absence of merged PRs and sorting by PR count",
     "confidence": "high",
-    "validation_notes": "The question asks for \"at least 5\" repos with PRs but no merges, and both the reference answer and the top results from the SQL query satisfy this requirement. The reference answer's repos are all verified as having 0 merged PRs based on Query 3. The main difference is that the SQL results reveal there are many other repos with more unmerged PRs that could have been listed instead."
+    "validation_notes": "Verified via SQL. These are all forks of opentelemetry-collector-contrib where only dependabot PRs exist. hantsy/vertx-sandbox (30 PRs) is the top non-otel repo with no merges."
   },
   {
     "id": "q12",
@@ -184,10 +184,10 @@
     "question": "Find issues where someone reported a bug, and then later someone submitted a PR that claims to fix that specific issue. List these bug-fix pairs.",
     "category": "multi_hop",
     "difficulty": "hard",
-    "reference_answer": "Examples of bug-fix pairs include: 2023-Winter-Bootcamp-Team-I/backend issue #65 (JSON bracket bug) fixed by PR #66, Future-Scholars/paperlib issue #279 (special HTML element rendering bug) fixed by PR #345, INTI-CMNB/KiBot issue #556 (git worktree cleanup bug) fixed by PR #557, LostArtefacts/TR-Rando issue #597 (secret and reward issues) fixed by PR #598, OpenPrinting/cups issue #838 (infinite httpPost loop bug) fixed by PR #864, PiSCSI/piscsi issue #1415 (broken pipe communication error) fixed by PR #1416, and Tribler/tribler issue #7801 (ValueError redirect issue) fixed by PR #7810.",
-    "notes": "Requires correlating issues and PRs through reference parsing",
+    "reference_answer": "Multiple bug-fix pairs exist where PRs reference fixing specific bug issues using 'fixes #', 'closes #', or 'resolves #'. Examples include: INTI-CMNB/KiBot #556 (git worktree cleanup bug) fixed by PR #557, LostArtefacts/TR-Rando #597 (secret and reward issues) fixed by PR #598, OpenPrinting/cups #838 (infinite httpPost loop) fixed by PR #864, Tribler/tribler #7801 (ValueError redirect) fixed by PR #7810, EleutherAI/lm-evaluation-harness #1250 (KeyError cache issue) fixed by PR #1270, FerretDB/FerretDB #2051 (search query bug) fixed by PR #3976, calcom/cal.com #12881 (reschedule workflow trigger bug) fixed by PR #13122, files-community/Files #14452 (Ctrl+N opens tab bug) fixed by PR #14463, and jaegertracing/jaeger #5090 (flaky test bug) fixed by PR #5094.",
+    "notes": "Requires correlating issues and PRs through reference parsing. Look for PRs with body containing 'fixes #N', 'closes #N', or 'resolves #N' where issue #N has bug label or bug in title.",
     "confidence": "high",
-    "validation_notes": "The SQL query successfully identified 20 bug-fix pairs where issues (labeled with \"bug\" or containing \"bug\" in the title) are linked to PRs that reference the issue number with fixing language. The examples provided are based on actual data from the database, showing real bug-fix relationships across various repositories. The reference answer appears to contain fabricated or outdated examples that don't exist in the current dataset."
+    "validation_notes": "Database contains 25+ bug-fix pairs across repos including INTI-CMNB/KiBot, LostArtefacts/TR-Rando, OpenPrinting/cups, Tribler/tribler, EleutherAI/lm-evaluation-harness, FerretDB/FerretDB, calcom/cal.com, files-community/Files, jaegertracing/jaeger, and others. The answer is open-ended - any valid bug-fix pairs from the dataset should be accepted."
   },
   {
     "id": "q20",
@@ -241,13 +241,13 @@
   },
   {
     "id": "q25",
-    "question": "Which human user (excluding bots) has made the most comments across all issues and PRs?",
+    "question": "Which human user (excluding bots and CI systems) has made the most comments across all issues and PRs?",
     "category": "aggregation",
     "difficulty": "medium",
-    "reference_answer": "Among humans, liferay-continuous-integration made 48 comments across 16 threads. Other active commenters include breathx (41 comments), wingetbot (38), qperie (33), and openshift-ci-robot (34). Note: some of these may be CI systems rather than humans.",
-    "notes": "Requires filtering bots and aggregating comments",
-    "confidence": "medium",
-    "validation_notes": "The question asks for \"human users excluding bots\" but the SQL filter only excludes accounts with \"[bot]\" suffix or ending in \"bot\". Many top commenters like \"liferay-continuous-integration\", \"codecov-commenter\", \"poiana\", and \"coveralls\" are clearly CI/automation systems despite not having \"bot\" in their names. If we're looking for actual human users, breathx (41 comments on 1 thread) or qperie (33 comments on 1 thread) would be stronger candidates, though their activity patterns (many comments on single threads) could also indicate automated behavior."
+    "reference_answer": "breathx has made the most comments with 41 comments. Other active human commenters include qperie (33 comments), Walavouchey (20), bastian-purrer (20), and blazejkustra (20). Note: accounts like liferay-continuous-integration (48), codecov-commenter (34), coveralls (23), and poiana (27) are CI/automation systems and should be excluded.",
+    "notes": "Requires filtering bots AND CI systems (e.g., accounts with 'ci', 'continuous-integration', 'codecov', 'coveralls' in name)",
+    "confidence": "high",
+    "validation_notes": "Top commenters after excluding bots and CI systems: breathx (41), qperie (33), Walavouchey (20), bastian-purrer (20), blazejkustra (20). CI systems to exclude: liferay-continuous-integration, codecov-commenter, poiana, coveralls, openshift-ci-robot, wingetbot."
   },
   {
     "id": "q26",
@@ -274,10 +274,10 @@
     "question": "Compare the llvm/llvm-project and NixOS/nixpkgs repositories. Which has more active contributors? How do their issue and PR counts compare?",
     "category": "comparative",
     "difficulty": "hard",
-    "reference_answer": "llvm/llvm-project has 25 unique issue authors and 26 PR authors. NixOS/nixpkgs has 16 issue authors but 26 PR authors. NixOS/nixpkgs has significantly more issues (688) compared to llvm/llvm-project. Both have strong community contribution.",
-    "notes": "Requires comparing metrics across two specific repos",
-    "confidence": "medium",
-    "validation_notes": "The SQL query for issue/PR counts may have an issue as the issue_count (16, 27) matches the unique_issue_authors count, suggesting potential query problems. The \"688 issues\" figure in the reference answer seems drastically different from the SQL results, possibly referring to total historical issues rather than the sample in this dataset. The data appears to be a limited sample rather than complete repository statistics. NixOS/nixpkgs does have more PRs (43 vs 29), suggesting strong PR-based contribution activity despite fewer unique issue authors."
+    "reference_answer": "In this dataset, llvm/llvm-project has 27 issues and 29 PRs with 25 unique issue authors and 26 unique PR authors. NixOS/nixpkgs has 16 issues and 43 PRs with 16 unique issue authors and 26 unique PR authors. llvm/llvm-project has more issues and more unique issue reporters, while NixOS/nixpkgs has significantly more PRs (43 vs 29), suggesting stronger PR-based contribution activity. Both repos have the same number of unique PR authors (26), indicating comparable contributor diversity for pull requests.",
+    "notes": "Requires comparing metrics across two specific repos in the eval dataset",
+    "confidence": "high",
+    "validation_notes": "Verified via SQL: llvm/llvm-project has 27 issues, 29 PRs, 25 unique issue authors, 26 unique PR authors. NixOS/nixpkgs has 16 issues, 43 PRs, 16 unique issue authors, 26 unique PR authors."
   },
   {
     "id": "q29",

@@ -104,7 +104,7 @@ Return ONLY valid SQL queries, one per line. No explanation.`,
 Reference answer to validate: ${question.reference_answer}
 
 Generate SQL queries to verify this answer:`,
-    maxTokens: { type: 'token', value: 1000 },
+    maxOutputTokens: 1000,
   });
 
   // Parse SQL queries - handle multi-line queries by splitting on semicolons
@@ -138,7 +138,7 @@ The data is stored in data/filesystem/ with structure:
 Be concise - just describe the approach in 1-2 sentences.`,
     prompt: `Question: ${question.question}
 How would you validate using bash/filesystem?`,
-    maxTokens: { type: 'token', value: 200 },
+    maxOutputTokens: 200,
   });
 
   // Step 4: Synthesize findings and produce validated answer
@@ -167,7 +167,7 @@ VALIDATED_ANSWER: [the correct answer based on evidence]
 CONFIDENCE: [high or medium or low]
 DISCREPANCIES: [list any differences from reference answer, or "none" if it matches]
 NOTES: [any caveats or additional context]`,
-    maxTokens: { type: 'token', value: 1000 },
+    maxOutputTokens: 1000,
   });
 
   // Parse the synthesis response

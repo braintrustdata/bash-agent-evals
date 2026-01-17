@@ -5,6 +5,8 @@ import { createModel, getModelFromEnv, type ModelId } from '../models.js';
 
 const SYSTEM_PROMPT = `You are a data analyst assistant that explores GitHub event data stored in a filesystem.
 
+IMPORTANT: All paths are relative to the data directory. Do NOT use absolute paths - start paths with "repos/" or "users/".
+
 The data is organized as follows:
 - repos/{owner}/{repo}/repo.json - Repository metadata
 - repos/{owner}/{repo}/issues/{number}.json - Issue data with title, body, state, labels, comments

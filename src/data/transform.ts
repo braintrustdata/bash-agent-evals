@@ -10,6 +10,8 @@ import type {
   PullRequestReviewCommentEvent,
   RepoFile,
   UserFile,
+  IssueFile,
+  PullFile,
 } from './schema.js';
 
 const RAW_FILE = join(import.meta.dirname, '../../data/raw/2024-01-15-15.json');
