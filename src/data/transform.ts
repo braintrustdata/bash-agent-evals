@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, unlinkSync, createReadStream } from 'fs';
 import { createInterface } from 'readline';
 import { join } from 'path';
 import Database from 'better-sqlite3';
@@ -213,17 +213,44 @@ async function readAndProcessEvents() {
   });
 
   let count = 0;
+  let accumulated = '';
+
   for await (const line of rl) {
-    if (!line.trim()) continue;
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // If line starts with {, it's a new JSON object
+    if (trimmed.startsWith('{')) {
+      // Try to parse any accumulated content first
+      if (accumulated) {
+        try {
+          const event = JSON.parse(accumulated) as GitHubEvent;
+          processEvent(event);
+          count++;
+        } catch {
+          // Skip malformed accumulated content
+        }
+      }
+      accumulated = line;
+    } else {
+      // This line is a continuation of previous (embedded newline in JSON string)
+      // The newline needs to be escaped for JSON.parse to accept it
+      accumulated += '\\n' + line;
+    }
+
+    if (count % 100000 === 0 && count > 0) {
+      console.log(`Processed ${count} events...`);
+    }
+  }
+
+  // Don't forget the last accumulated entry
+  if (accumulated) {
     try {
-      const event = JSON.parse(line) as GitHubEvent;
+      const event = JSON.parse(accumulated) as GitHubEvent;
       processEvent(event);
       count++;
-      if (count % 100000 === 0) {
-        console.log(`Processed ${count} events...`);
-      }
     } catch {
-      // Skip malformed lines
+      // Skip malformed
     }
   }
 
@@ -289,7 +316,7 @@ function writeDatabase() {
 
   // Remove existing database
   if (existsSync(DB_PATH)) {
-    require('fs').unlinkSync(DB_PATH);
+    unlinkSync(DB_PATH);
   }
 
   const db = new Database(DB_PATH);
@@ -373,124 +400,144 @@ function writeDatabase() {
     CREATE INDEX idx_events_actor ON events(actor_login);
   `);
 
-  // Insert repos
-  const insertRepo = db.prepare(
-    'INSERT OR IGNORE INTO repos (id, owner, name, full_name) VALUES (?, ?, ?, ?)',
-  );
-  for (const repo of repos.values()) {
-    insertRepo.run(repo.id, repo.owner, repo.name, repo.full_name);
-  }
-
-  // Insert users
-  const insertUser = db.prepare(
-    'INSERT OR IGNORE INTO users (id, login, issues_opened, prs_opened, comments_made) VALUES (?, ?, ?, ?, ?)',
-  );
-  for (const user of users.values()) {
-    insertUser.run(user.id, user.login, user.issues_opened, user.prs_opened, user.comments_made);
-  }
-
-  // Create a map of repo full_name to id for foreign keys
-  const repoIdMap = new Map<string, number>();
-  for (const repo of repos.values()) {
-    repoIdMap.set(repo.full_name, repo.id);
-  }
-
-  // Insert issues
-  const insertIssue = db.prepare(`
-    INSERT OR IGNORE INTO issues (id, repo_id, number, title, body, state, author, labels_json, created_at, updated_at, closed_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const issueIdMap = new Map<string, number>();
-  for (const [key, issue] of issues) {
-    const repoName = key.split('#')[0];
-    const repoId = repoIdMap.get(repoName);
-    if (repoId) {
-      insertIssue.run(
-        issue.id,
-        repoId,
-        issue.number,
-        issue.title,
-        issue.body,
-        issue.state,
-        issue.author,
-        JSON.stringify(issue.labels),
-        issue.created_at,
-        issue.updated_at,
-        issue.closed_at,
-      );
-      issueIdMap.set(key, issue.id);
-    }
-  }
-
-  // Insert pulls
-  const insertPull = db.prepare(`
-    INSERT OR IGNORE INTO pulls (id, repo_id, number, title, body, state, author, merged, merged_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const pullIdMap = new Map<string, number>();
-  for (const [key, pull] of pulls) {
-    const repoName = key.split('#')[0];
-    const repoId = repoIdMap.get(repoName);
-    if (repoId) {
-      insertPull.run(
-        pull.id,
-        repoId,
-        pull.number,
-        pull.title,
-        pull.body,
-        pull.state,
-        pull.author,
-        pull.merged ? 1 : 0,
-        pull.merged_at,
-        pull.created_at,
-        pull.updated_at,
-      );
-      pullIdMap.set(key, pull.id);
-    }
-  }
-
-  // Insert comments
-  const insertComment = db.prepare(`
-    INSERT OR IGNORE INTO comments (id, issue_id, pull_id, body, author, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
-  for (const [key, issue] of issues) {
-    const issueId = issueIdMap.get(key);
-    for (const comment of issue.comments) {
-      insertComment.run(
-        comment.id,
-        issueId,
-        null,
-        comment.body,
-        comment.author,
-        comment.created_at,
-      );
-    }
-  }
-  for (const [key, pull] of pulls) {
-    const pullId = pullIdMap.get(key);
-    for (const comment of pull.comments) {
-      insertComment.run(comment.id, null, pullId, comment.body, comment.author, comment.created_at);
-    }
-  }
-
-  // Insert events (sample - first 100k to keep DB manageable)
-  const insertEvent = db.prepare(`
-    INSERT OR IGNORE INTO events (id, type, actor_login, repo_name, payload_json, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
-  const eventsToInsert = events.slice(0, 100000);
-  for (const event of eventsToInsert) {
-    insertEvent.run(
-      event.id,
-      event.type,
-      event.actor.login,
-      event.repo.name,
-      JSON.stringify((event as any).payload || {}),
-      event.created_at,
+  // Use a transaction for all inserts (massive performance boost)
+  const insertAll = db.transaction(() => {
+    // Insert repos
+    const insertRepo = db.prepare(
+      'INSERT OR IGNORE INTO repos (id, owner, name, full_name) VALUES (?, ?, ?, ?)',
     );
-  }
+    for (const repo of repos.values()) {
+      insertRepo.run(repo.id, repo.owner, repo.name, repo.full_name);
+    }
+    console.log(`  Inserted ${repos.size} repos`);
 
+    // Insert users
+    const insertUser = db.prepare(
+      'INSERT OR IGNORE INTO users (id, login, issues_opened, prs_opened, comments_made) VALUES (?, ?, ?, ?, ?)',
+    );
+    for (const user of users.values()) {
+      insertUser.run(user.id, user.login, user.issues_opened, user.prs_opened, user.comments_made);
+    }
+    console.log(`  Inserted ${users.size} users`);
+
+    // Create a map of repo full_name to id for foreign keys
+    const repoIdMap = new Map<string, number>();
+    for (const repo of repos.values()) {
+      repoIdMap.set(repo.full_name, repo.id);
+    }
+
+    // Insert issues
+    const insertIssue = db.prepare(`
+      INSERT OR IGNORE INTO issues (id, repo_id, number, title, body, state, author, labels_json, created_at, updated_at, closed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const issueIdMap = new Map<string, number>();
+    for (const [key, issue] of issues) {
+      const repoName = key.split('#')[0];
+      const repoId = repoIdMap.get(repoName);
+      if (repoId) {
+        insertIssue.run(
+          issue.id,
+          repoId,
+          issue.number,
+          issue.title,
+          issue.body,
+          issue.state,
+          issue.author,
+          JSON.stringify(issue.labels),
+          issue.created_at,
+          issue.updated_at,
+          issue.closed_at,
+        );
+        issueIdMap.set(key, issue.id);
+      }
+    }
+    console.log(`  Inserted ${issues.size} issues`);
+
+    // Insert pulls
+    const insertPull = db.prepare(`
+      INSERT OR IGNORE INTO pulls (id, repo_id, number, title, body, state, author, merged, merged_at, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const pullIdMap = new Map<string, number>();
+    for (const [key, pull] of pulls) {
+      const repoName = key.split('#')[0];
+      const repoId = repoIdMap.get(repoName);
+      if (repoId) {
+        insertPull.run(
+          pull.id,
+          repoId,
+          pull.number,
+          pull.title,
+          pull.body,
+          pull.state,
+          pull.author,
+          pull.merged ? 1 : 0,
+          pull.merged_at,
+          pull.created_at,
+          pull.updated_at,
+        );
+        pullIdMap.set(key, pull.id);
+      }
+    }
+    console.log(`  Inserted ${pulls.size} pulls`);
+
+    // Insert comments
+    const insertComment = db.prepare(`
+      INSERT OR IGNORE INTO comments (id, issue_id, pull_id, body, author, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    let commentCount = 0;
+    for (const [key, issue] of issues) {
+      const issueId = issueIdMap.get(key);
+      for (const comment of issue.comments) {
+        insertComment.run(
+          comment.id,
+          issueId,
+          null,
+          comment.body,
+          comment.author,
+          comment.created_at,
+        );
+        commentCount++;
+      }
+    }
+    for (const [key, pull] of pulls) {
+      const pullId = pullIdMap.get(key);
+      for (const comment of pull.comments) {
+        insertComment.run(
+          comment.id,
+          null,
+          pullId,
+          comment.body,
+          comment.author,
+          comment.created_at,
+        );
+        commentCount++;
+      }
+    }
+    console.log(`  Inserted ${commentCount} comments`);
+
+    // Insert events (sample - first 100k to keep DB manageable)
+    const insertEvent = db.prepare(`
+      INSERT OR IGNORE INTO events (id, type, actor_login, repo_name, payload_json, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const eventsToInsert = events.slice(0, 100000);
+    for (const event of eventsToInsert) {
+      insertEvent.run(
+        event.id,
+        event.type,
+        event.actor.login,
+        event.repo.name,
+        JSON.stringify((event as any).payload || {}),
+        event.created_at,
+      );
+    }
+    console.log(`  Inserted ${eventsToInsert.length} events`);
+  }); // end transaction
+
+  insertAll(); // execute the transaction
   db.close();
   console.log(`Database written to: ${DB_PATH}`);
 }

@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - '@mongodb-js/zstd'
+  - better-sqlite3
+  - esbuild
+  - node-liblzma
