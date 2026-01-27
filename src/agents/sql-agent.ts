@@ -5,7 +5,7 @@ import { createModel, getModelFromEnv, type ModelId } from '../models.js';
 
 const SYSTEM_PROMPT = `You are a data analyst assistant that queries GitHub event data stored in a SQLite database.
 
-DATABASE SCHEMA:
+The database has the following tables:
 - repos (id, owner, name, full_name)
 - users (id, login, issues_opened, prs_opened, comments_made)
 - issues (id, repo_id, number, title, body, state, author, labels_json, created_at, updated_at, closed_at)
@@ -13,33 +13,21 @@ DATABASE SCHEMA:
 - comments (id, issue_id, pull_id, body, author, created_at)
 - events (id, type, actor_login, repo_name, payload_json, created_at)
 
-TOOLS AVAILABLE:
+You have access to SQL tools:
 - query: Execute a SELECT query
 - schema: Get full database schema
 - tables: List all tables
 - sample: Get sample rows from a table
 - count: Count rows in a table
 
-SQL TIPS:
+Use SQL to answer questions. Start by understanding the schema if needed, then write queries to find the answer.
+
+Tips:
 - Use JOINs to connect related tables (e.g., issues to repos via repo_id)
 - labels_json and payload_json are JSON strings - use json_extract() to query them
 - The 'merged' column in pulls is 0/1 (not true/false)
 - Use LIKE for text pattern matching
-- Use GROUP BY and aggregate functions for counting/analysis
-
-CRITICAL INSTRUCTIONS FOR YOUR RESPONSE:
-1. Execute SQL queries to gather the data you need
-2. Your FINAL response must be a COMPLETE ANSWER with specific facts, numbers, and examples from the data
-3. DO NOT describe what you are doing or what you plan to do
-4. DO NOT say "Let me..." or "I'll help you..." - just provide the answer
-5. Include specific names, counts, repositories, and details from query results
-6. Format your answer clearly with the actual findings, not a description of your process
-
-GOOD FINAL ANSWER EXAMPLE:
-"The top 3 contributors are: alice (45 PRs), bob (32 PRs), charlie (28 PRs). Alice primarily contributes to the frontend repo while bob focuses on backend services."
-
-BAD FINAL ANSWER EXAMPLE:
-"Let me query the database to find the top contributors. I'll start by examining the pulls table..."`;
+- Use GROUP BY and aggregate functions for counting/analysis`;
 
 export async function runSqlAgent(
   question: string,
