@@ -14,7 +14,8 @@ export type ModelId =
   | 'gpt-5'
   | 'gpt-5-mini'
   | 'gpt-5-nano'
-  | 'glm-4.7';
+  | 'glm-4.7'
+  | 'kimi-k2.5';
 
 /**
  * Model configuration with official API model strings
@@ -31,6 +32,7 @@ const MODEL_CONFIG: Record<
   'gpt-5-mini': { provider: 'openai', modelId: 'gpt-5-mini' },
   'gpt-5-nano': { provider: 'openai', modelId: 'gpt-5-nano' },
   'glm-4.7': { provider: 'baseten', modelId: 'zai-org/GLM-4.7' },
+  'kimi-k2.5': { provider: 'baseten', modelId: 'moonshotai/Kimi-K2.5' },
 };
 
 // Lazy-initialized Baseten provider
