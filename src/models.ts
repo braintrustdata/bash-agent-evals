@@ -1,5 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { openai } from '@ai-sdk/openai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModel } from 'ai';
 
 /**
@@ -12,12 +13,17 @@ export type ModelId =
   | 'gpt-5.1'
   | 'gpt-5'
   | 'gpt-5-mini'
-  | 'gpt-5-nano';
+  | 'gpt-5-nano'
+  | 'glm-4.7'
+  | 'kimi-k2.5';
 
 /**
  * Model configuration with official API model strings
  */
-const MODEL_CONFIG: Record<ModelId, { provider: 'anthropic' | 'openai'; modelId: string }> = {
+const MODEL_CONFIG: Record<
+  ModelId,
+  { provider: 'anthropic' | 'openai' | 'baseten'; modelId: string }
+> = {
   'claude-opus-4-5': { provider: 'anthropic', modelId: 'claude-opus-4-5' },
   'claude-sonnet-4-5': { provider: 'anthropic', modelId: 'claude-sonnet-4-5' },
   'claude-haiku-4-5': { provider: 'anthropic', modelId: 'claude-haiku-4-5' },
@@ -25,7 +31,23 @@ const MODEL_CONFIG: Record<ModelId, { provider: 'anthropic' | 'openai'; modelId:
   'gpt-5': { provider: 'openai', modelId: 'gpt-5' },
   'gpt-5-mini': { provider: 'openai', modelId: 'gpt-5-mini' },
   'gpt-5-nano': { provider: 'openai', modelId: 'gpt-5-nano' },
+  'glm-4.7': { provider: 'baseten', modelId: 'zai-org/GLM-4.7' },
+  'kimi-k2.5': { provider: 'baseten', modelId: 'moonshotai/Kimi-K2.5' },
 };
+
+// Lazy-initialized Baseten provider
+let basetenProvider: ReturnType<typeof createOpenAICompatible> | null = null;
+
+function getBasetenProvider() {
+  if (!basetenProvider) {
+    basetenProvider = createOpenAICompatible({
+      name: 'baseten',
+      apiKey: process.env.BASETEN_API_KEY!,
+      baseURL: 'https://inference.baseten.co/v1',
+    });
+  }
+  return basetenProvider;
+}
 
 /**
  * Default model if none specified
@@ -70,6 +92,8 @@ export function createModel(modelId: ModelId): LanguageModel {
 
   if (config.provider === 'anthropic') {
     return anthropic(config.modelId);
+  } else if (config.provider === 'baseten') {
+    return getBasetenProvider()(config.modelId);
   } else {
     return openai(config.modelId);
   }

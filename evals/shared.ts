@@ -114,7 +114,7 @@ export const Factuality = async (args: {
 import { runAgentInWorker } from '../src/agents/run-in-worker.js';
 import { defaultErrorScoreHandler, type Span } from 'braintrust';
 
-export type AgentType = 'bash' | 'bash-sqlite' | 'fs' | 'sql' | 'embedding';
+export type AgentType = 'bash' | 'bash-sqlite' | 'fs' | 'sql' | 'embedding' | 'codemode';
 
 // Helper to create task that runs agent in a worker process with tracing
 export const createWorkerTask =
