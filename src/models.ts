@@ -14,6 +14,7 @@ export type ModelId =
   | 'gpt-5'
   | 'gpt-5-mini'
   | 'gpt-5-nano'
+  | 'glm-5'
   | 'glm-4.7'
   | 'kimi-k2.5';
 
@@ -22,7 +23,7 @@ export type ModelId =
  */
 const MODEL_CONFIG: Record<
   ModelId,
-  { provider: 'anthropic' | 'openai' | 'baseten'; modelId: string }
+  { provider: 'anthropic' | 'openai' | 'baseten' | 'modal'; modelId: string }
 > = {
   'claude-opus-4-5': { provider: 'anthropic', modelId: 'claude-opus-4-5' },
   'claude-sonnet-4-5': { provider: 'anthropic', modelId: 'claude-sonnet-4-5' },
@@ -31,12 +32,14 @@ const MODEL_CONFIG: Record<
   'gpt-5': { provider: 'openai', modelId: 'gpt-5' },
   'gpt-5-mini': { provider: 'openai', modelId: 'gpt-5-mini' },
   'gpt-5-nano': { provider: 'openai', modelId: 'gpt-5-nano' },
+  'glm-5': { provider: 'modal', modelId: 'zai-org/GLM-5-FP8' },
   'glm-4.7': { provider: 'baseten', modelId: 'zai-org/GLM-4.7' },
   'kimi-k2.5': { provider: 'baseten', modelId: 'moonshotai/Kimi-K2.5' },
 };
 
 // Lazy-initialized Baseten provider
 let basetenProvider: ReturnType<typeof createOpenAICompatible> | null = null;
+let modalProvider: ReturnType<typeof createOpenAICompatible> | null = null;
 
 function getBasetenProvider() {
   if (!basetenProvider) {
@@ -47,6 +50,17 @@ function getBasetenProvider() {
     });
   }
   return basetenProvider;
+}
+
+function getModalProvider() {
+  if (!modalProvider) {
+    modalProvider = createOpenAICompatible({
+      name: 'modal',
+      apiKey: process.env.MODAL_API_KEY!,
+      baseURL: 'https://api.us-west-2.modal.direct/v1',
+    });
+  }
+  return modalProvider;
 }
 
 /**
@@ -94,6 +108,8 @@ export function createModel(modelId: ModelId): LanguageModel {
     return anthropic(config.modelId);
   } else if (config.provider === 'baseten') {
     return getBasetenProvider()(config.modelId);
+  } else if (config.provider === 'modal') {
+    return getModalProvider()(config.modelId);
   } else {
     return openai(config.modelId);
   }

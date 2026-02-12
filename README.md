@@ -54,6 +54,8 @@ pnpm transform:codemode
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...  # Required for Claude
 OPENAI_API_KEY=sk-...         # Required for embeddings
+BASETEN_API_KEY=...           # Required for Baseten-hosted models (glm-4.7, kimi-k2.5)
+MODAL_API_KEY=...             # Required for Modal-hosted models (glm-5)
 BRAINTRUST_API_KEY=...        # Required for evals
 BASH_TIMEOUT_MS=10000         # Optional: bash command timeout in ms (default: 10000)
 ```
@@ -285,6 +287,7 @@ pnpm eval
 # Use a different model
 MODEL=claude-sonnet-4-5 pnpm eval
 MODEL=gpt-5 pnpm eval
+MODEL=glm-5 pnpm eval:sql
 ```
 
 Supported models:
@@ -293,5 +296,7 @@ Supported models:
 - `claude-sonnet-4-5` - Good balance of speed/accuracy
 - `claude-haiku-4-5` - Fastest
 - `gpt-5.1`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano` - OpenAI models
+- `glm-5` - Modal (`zai-org/GLM-5-FP8`)
+- `glm-4.7`, `kimi-k2.5` - Baseten-hosted models
 
 The eval includes model and agent in experiment metadata for slicing results by both dimensions.
